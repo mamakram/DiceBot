@@ -32,6 +32,9 @@ endurance;
   setHp(hp) {
     this.hp = hp;
   }
+  getHp(){
+    return this.hp;
+  }
   setCombat(combat) {
     this.combat = combat;
   }

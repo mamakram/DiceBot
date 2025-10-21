@@ -9,6 +9,7 @@ export function createDatabase() {
         key INTEGER PRIMARY KEY,
         NAME TEXT UNIQUE,
         AUTHORID TEXT,
+        GUILD TEXT,
         HP INTEGER DEFAULT 0,
         STAMINA INTEGER DEFAULT 0,
         COMBAT INTEGER,
@@ -56,14 +57,14 @@ export function createDatabase() {
     ) STRICT`);
 }
 
-export function addPlayer(name,id) {
+export function addPlayer(name,id,guild) {
   if (getInfoPlayer(name) !=undefined){
     return false
   }
   let insert = database.prepare(
-    "INSERT INTO players (NAME,AUTHORID,HP,STAMINA) VALUES (?,?,0,0)",
+    "INSERT INTO players (NAME,AUTHORID,GUILD,HP,STAMINA) VALUES (?,?,?,0,0)",
   );
-  insert.run(name,id);
+  insert.run(name,id,guild);
   return true
 }
 
@@ -82,13 +83,12 @@ export function updateSkills(stat, name, value) {
 }
 
 export function modifyHP(player,amount){
-  console.log(player)
   let get = database.prepare("SELECT HP FROM players WHERE NAME = ?");
   let p = get.all(player)[0];
   if (p){
       let hp = parseInt(p.HP)
-      if (typeof(amount)==Number && Number.isInteger(amount) && hp+amount>=0){
-          hp = hp+amount
+      if (typeof(amount)=="number" && Number.isInteger(amount) && hp+amount>=0){
+          hp += amount
           let update = database.prepare(
           "UPDATE players SET HP = ? WHERE NAME = ?",);
           update.run(hp, player);
@@ -99,7 +99,6 @@ export function modifyHP(player,amount){
 }
 
 export function getInfoPlayer(name) {
-  console.log(name)
   let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
   let p = get.all(name)[0];
   if (p){
@@ -118,23 +117,22 @@ export function getInfoPlayer(name) {
 }else {return undefined}
 }
 
-export function getPlayerFromAuthorId(id) {
-  let get = database.prepare("SELECT name FROM players WHERE AUTHORID = ?");
-  let p = get.all(id);
+export function getPlayerFromAuthorId(id,guild) {
+  let get = database.prepare("SELECT name FROM players WHERE AUTHORID = ? AND GUILD=?");
   let ret = [];
-  for (obj in p){
-    ret.push(p.name)
+  let p = get.all(id,guild);
+  for (var obj of p){
+    ret.push(obj.NAME)
   }
   return ret
 }
 
-export function getStatus() {
-  let get = database.prepare("SELECT name,HP FROM players");
-  let p=get.all()
-  let ret = "```"
-  for (let i =0;i<p.length;i++){
-    ret += p[i].NAME+" : "+p[i].HP+" PV\n"
+export function getStatus(guild) {
+  let get = database.prepare("SELECT name,HP FROM players WHERE GUILD=?");
+  let p=get.all(guild)
+  let ret = []
+  for (var player of p){
+    ret.push({"name":player.NAME,"HP":player.HP})
   }
-  ret = ret+"```"
   return ret;
 }

@@ -2,7 +2,6 @@
 import * as dotenv from 'dotenv';
 dotenv.config({path:"tokens.env"});
 const token = process.env["DISCORD_BOT_TOKEN"];
-console.log(token)
 
 // Import Discord.js
 import {
@@ -25,8 +24,10 @@ import {
   GuildMember,
   User,
   Collection,
+  Guild,
   ModalSubmitFields,
-  EmbedBuilder
+  EmbedBuilder,
+  StringSelectMenuOptionBuilder
 } from "discord.js";
 import {
   createDatabase,
@@ -36,6 +37,7 @@ import {
   removePlayer,
   getStatus,
   getPlayerFromAuthorId,
+  modifyHP,
 } from "./database.js";
 import { playMusic, disconnect } from "./musicplayer.js";
 import { playerCreationModal, statSelectionModal } from './menus.js';
@@ -71,10 +73,10 @@ client.on("messageCreate", async (msg) => {
     case "?nouveau":
       createPlayer(msg);
       break;
-    case "?ajouterHP":
+    case "?ajouterPV":
       addHP(msg);
       break;
-    case "?enleverHP":
+    case "?enleverPV":
       removeHP(msg);
       break;
     case "?supprimer":
@@ -110,42 +112,113 @@ client.on("messageCreate", async (msg) => {
 });
 
 
+
+
+/**
+ * show a selection for players based on discord id
+ * 
+ */
+async function selectPlayer(msg,call,params){
+  let players = getPlayerFromAuthorId(msg.author.id,msg.guild.id)
+  let options =[]
+  console.log(params)
+  for(var p of players){
+    options.push(new StringSelectMenuOptionBuilder().setLabel(p).setValue(p))
+  }
+  let characterSelect = new StringSelectMenuBuilder()
+  .setCustomId("charSelect/"+msg.author.id+"/"+call+"/"+params.toString())
+  .setPlaceholder("personnage")
+  .addOptions(options)
+  let row = new ActionRowBuilder().addComponents(characterSelect);
+  await msg.channel.send({
+    content:"Sélectionnez le personnage",
+    components:[row],
+  })
+  return true
+}
+
+function applyFunction(call,params){
+  switch(call){
+    case "modifyHP":
+      modifyHP(params[0],parseInt(params[1]))
+      var p=getInfoPlayer(params[0]);
+      return params[0]+ " a "+p.getHp()+" PV";
+    case "removePlayer":
+      removePlayer(params[0])
+      return params[0]+ " a été supprimé !";
+    case "getInfoPlayer":
+      var p = getInfoPlayer(params[0])
+      return {embeds:[p.toEmbed()]};
+    }   
+  }
+
 /**return Info for a given player based on discord id
  * If multiple players exist, shows a selection menu to choose
  * **/
 async function getInfo(msg) {
-  const name = msg.content.substring(msg.content.split(" ")[0].length+1);
-  let player = getInfoPlayer(name);
-  if (player){
-  await msg.channel.send({embeds:[player.toEmbed()]})}
+  let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  if (player.length==1){
+    let p = getInfoPlayer(player[0]);
+    console.log(p.toString())
+    await msg.channel.send({embeds:[p.toEmbed()]})}
+  else if(player.length>1) {
+    selectPlayer(id,"getInfoPlayer",[])
+  }
   else{
     await msg.channel.send("Ce joueur n'existe pas")
   }
 }
 
 /**
- * show a selection for players based on discord id
- * 
- */
-function selectPlayer(){
-  return
-}
-
-
-/**
  * add HP
  * @param {*} msg 
  */
 async function addHP(msg){
-let amount = parseInt(cmd.content.split(" ")[-1])
-console.log(msg.author.id)
-console.log(getPlayerFromAuthorId(msg.author.id))
+let amount = parseInt(msg.content.split(" ")[2])
+let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+let player = getPlayerFromAuthorId(id,msg.guild.id)
+if (player.length==1){
+  modifyHP(player[0],amount);
+  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+else if(player.length>1) {
+  selectPlayer(msg,"modifyHP",[amount])
+}
+else{
+  await msg.channel.send("Ce joueur n'existe pas")
+}
 }
 
 async function removeHP(msg){
-let amount = parseInt(cmd.content.split(" ")[-1])
-console.log(msg.author.id)
-console.log(getPlayerFromAuthorId(msg.author.id))
+let amount = parseInt(msg.content.split(" ")[2])
+let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+let player = getPlayerFromAuthorId(id,msg.guild.id)
+if (player.length==1){
+  modifyHP(player[0],-amount);
+  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+else if(player.length>1) {
+  selectPlayer(msg,"modifyHP",[-amount])
+}
+else{
+  await msg.channel.send("Ce joueur n'existe pas")
+}
+}
+/**
+ * Delete a player associated to discord id of sender
+ * @param {*} msg discord message
+ */
+async function deletePlayer(msg) {
+  let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  if (player.length==1){
+    removePlayer(player[0]);
+    await msg.channel.send(player[0]+ " a été supprimé !")}
+  else if(player.length>1) {
+    selectPlayer(msg,"removePlayer",[])
+  }
+  else{
+    await msg.channel.send("Ce joueur n'existe pas")
+  }
 }
 
 
@@ -154,7 +227,12 @@ console.log(getPlayerFromAuthorId(msg.author.id))
  * @param {*} msg discord message
  */
 async function status(msg) {
-  await msg.channel.send(getStatus())
+  let state = getStatus(msg.guild.id)
+  let embed = new EmbedBuilder().setTitle("Statut")
+  for (var s of state){
+    embed.addFields({name:s.name,value:s.HP+" PV"},)
+  }
+  await msg.channel.send({embeds:[embed]})
 }
 
 /**
@@ -173,15 +251,7 @@ async function createPlayer(msg) {
   });
 }
 
-/**
- * Delete a player associated to discord id of sender
- * @param {*} msg discord message
- */
-async function deletePlayer(msg) {
-  const name = msg.content.substring(msg.content.split(" ")[0].length+1);
-  removePlayer(name);
-  await msg.channel.send(name+ " a été supprimé !");
-}
+
 
 
 /**
@@ -228,8 +298,8 @@ async function ModalInteraction(interaction) {
   switch(interaction.customId){
     case "createPlayerModal":
       var name = interaction.fields.getTextInputValue("nameInput");
-      const authorId = interaction.fields.getSelectedMembers("userSelect").first().user.id
-      if (addPlayer(name,authorId)){
+      let authorId = interaction.fields.getSelectedMembers("userSelect").first().user.id
+      if (addPlayer(name,authorId,interaction.guild.id)){
       var button = new ButtonBuilder()
       .setCustomId("openStatModal1"+"/"+interaction.user.id+"/"+name)
       .setLabel("choisir Stats (1/2)")
@@ -248,11 +318,11 @@ async function ModalInteraction(interaction) {
     case "statInputModal1":
       var name = interaction.message.components[0].components[0].customId.split("/")[2]
       for(var [customId,f] of interaction.fields.fields.entries()){
-        var value = f.id
+        var value = parseInt(f.values[0])
         let info = customId.split("/");
         let name = info[1];
         let stat = info[0];
-        updateSkills(stat, name, Number(value));
+        updateSkills(stat, name, value);
       }
       
       var button = new ButtonBuilder()
@@ -268,12 +338,11 @@ async function ModalInteraction(interaction) {
     case "statInputModal2":
       var name = interaction.message.components[0].components[0].customId.split("/")[2]
       for(var [customId,f] of interaction.fields.fields.entries()){
-        console.log(customId)
-        var value = f.id
+        var value = parseInt(f.values[0])
         let info = customId.split("/");
         let name = info[1];
         let stat = info[0];
-        updateSkills(stat, name, Number(value));
+        updateSkills(stat, name, value);
       }
       
       await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
@@ -292,6 +361,12 @@ client.on("interactionCreate", async (interaction) => {
     interaction.type === InteractionType.ModalSubmit
   ) {
     ModalInteraction(interaction)
+  }else if(interaction.isStringSelectMenu()){
+    var selected = interaction.values[0];
+    var info = interaction.customId.split("/");
+    console.log(info)
+    await interaction.reply(applyFunction(info[2],[selected].concat(JSON.parse("["+info[3]+"]"))))
+    await interaction.message.delete()
   }
 });
 
@@ -323,8 +398,8 @@ function help(msg) {
         {name:"?nouveau",value:"Créer un nouveau personnage", inline:true},
         {name:"?supprimer @joueur",value:"Supprime le personnage", inline:true},
         {name:"?info @joueur",value:"Donne les infos du personnage", inline:true},
-        {name:"?ajouterHP quantité",value:"", inline:true},
-        {name:"?enleverHP quantité",value:"", inline:true},
+        {name:"?ajouterPV @joueur quantité",value:"", inline:true},
+        {name:"?enleverPV @joueur quantité",value:"", inline:true},
       )
   msg.channel.send(
     {embeds:[embed]}
@@ -358,7 +433,6 @@ async function diceroll(msg) {
       while (counter > 0) {
         if (output.length > 900) {
           output += "..```";
-          console.log(output);
           try {
             await msg.channel.send(output);
           } catch (exception) {}

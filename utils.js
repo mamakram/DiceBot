@@ -1,7 +1,7 @@
 import { StringSelectMenuOptionBuilder } from "discord.js";
 
 
-export const MAX_STAT = 9;
+export const MAX_STAT = 10;
 export const STATS = [{
     niceName:"Combat",name:"COMBAT"
 },
