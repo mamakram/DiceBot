@@ -1,8 +1,16 @@
 # Dice Bot
+## Description
+DiceBot is a discord bot written in NodeJS that provides custom functionality for roleplaying. This includes:
 
-DiceBot is a discord bot written in NodeJS that provides functionality for roleplaying. This includes:
+- Rolling Dice
+- Creating player sheets and storing them in a database
+- Keep track of player HP and modify it during game session
+- Play sounds in discord channel to add ambience during game session
 
--Rolling Dice
--Creating player sheets and storing them in a database
--Keep track of player HP and modify
--Play sounds to add ambience during session
+Type ?help to show available commands
+
+## Installation
+
+- Clone the git repo, add a discord bot token in a .env file in the main directory with the appropriate Guild membership permissions for message reading,modification and voice channel access
+- npm install
+- npm run start
