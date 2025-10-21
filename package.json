@@ -1,17 +1,26 @@
 {
-  "name": "nodejs",
+  "name": "discord-bot",
   "version": "1.0.0",
-  "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "description": "A Discord bot built with Node.js 22 and discord.js",
   "dependencies": {
-    "@types/node": "^18.0.6",
-    "discord.js": "^14.5.0",
-    "node-fetch": "^3.2.6"
+    "@discordjs/voice": "^0.19.0",
+    "@snazzah/davey": "^0.1.7",
+    "better-sqlite3": "^11.7.0",
+    "discord.js": "^14.23.2",
+    "dotenv": "^17.2.3",
+    "ffmpeg": "^0.0.4",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "libsodium-wrappers-sumo": "^0.7.15",
+    "opusscript": "^0.0.8"
   }
 }
