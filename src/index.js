@@ -1,8 +1,7 @@
 // Load environment variables
 import * as dotenv from 'dotenv';
-dotenv.config({path:"tokens.env"});
+dotenv.config({path: new URL('../tokens.env', import.meta.url).pathname });
 const token = process.env["DISCORD_BOT_TOKEN"];
-
 // Import Discord.js
 import {
   Client,

@@ -1,7 +1,7 @@
 // SQLite (sync)
 import { DatabaseSync } from "node:sqlite";
 import { Player } from "./player.js";
-const database = new DatabaseSync("data.db");
+const database = new DatabaseSync("../data.db");
 
 export function createDatabase() {
   database.exec(`
