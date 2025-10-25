@@ -1,30 +1,14 @@
-import { StringSelectMenuOptionBuilder } from "discord.js";
+import { StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 
 
-export const MAX_STAT = 10;
-export const STATS = [{
-    niceName:"Combat",name:"COMBAT"
-},
-{
-    niceName:"Survie",name:"SURVIVAL"
-},
-{
-    niceName:"Mécanique/Bricolage",name:"MECHANIC"
-},
-{
-    niceName:"Médecine",name:"MEDECINE"
-},
-{
-    niceName:"Discrétion",name:"DISCRETION"
-},
-{
-    niceName:"Charisme",name:"CHARISMA"
-},
-{
-    niceName:"Perception",name:"PERCEPTION"
-},
-{
-    niceName:"Endurance",name:"ENDURANCE"
-},
 
-]
+
+export function NumberOptions(max_value,start_value=1){
+    let options = []
+    for (let i =start_value;i<=max_value;i++){
+        options.push(new StringSelectMenuOptionBuilder().setLabel(i.toString()).setValue(i.toString())
+    )
+
+    }
+    return options
+}

@@ -18,8 +18,34 @@ import {
   LabelBuilder,
 } from "discord.js";
 
-import {STATS,MAX_STAT } from "./utils.js";
+import {NumberOptions} from "./utils.js";
+const MAX_STAT = 10;
+const STATS = [{
+    niceName:"Combat",name:"COMBAT"
+},
+{
+    niceName:"Survie",name:"SURVIVAL"
+},
+{
+    niceName:"Mécanique/Bricolage",name:"MECHANIC"
+},
+{
+    niceName:"Médecine",name:"MEDECINE"
+},
+{
+    niceName:"Discrétion",name:"DISCRETION"
+},
+{
+    niceName:"Charisme",name:"CHARISMA"
+},
+{
+    niceName:"Perception",name:"PERCEPTION"
+},
+{
+    niceName:"Endurance",name:"ENDURANCE"
+},
 
+]
 
 export function playerCreationModal(){
     
@@ -33,6 +59,11 @@ export function playerCreationModal(){
       .setStyle(TextInputStyle.Short)
       .setMinLength(1)
       .setRequired(true);
+  const hpSelect = new StringSelectMenuBuilder()
+      .setCustomId("hpSelect")
+      .setPlaceholder("PV")
+      .setRequired(true)
+  hpSelect.addOptions(NumberOptions(20),)
   const modal = new ModalBuilder()
       .setCustomId("createPlayerModal")
       .setTitle("Fiche de personnage");
@@ -45,7 +76,11 @@ export function playerCreationModal(){
         .setLabel("Nom")
         .setDescription("Nom du personnage")
         .setTextInputComponent(
-          nameInput)
+          nameInput),
+      new LabelBuilder()
+      .setLabel("PV")
+      .setDescription("PV MAX du joueur")
+      .setStringSelectMenuComponent(hpSelect),
     )
     return modal
 }
@@ -56,9 +91,7 @@ export function statSelectionModal(name){
         modalComponents.push(new StringSelectMenuBuilder()
       .setCustomId(STATS[i].name+"/" + name)
       .setPlaceholder(STATS[i].niceName))
-      for(let j=0;j<MAX_STAT;j++){
-        modalComponents[i].addOptions(new StringSelectMenuOptionBuilder().setLabel(j.toString()).setValue(j.toString()),)
-    }
+        modalComponents[i].addOptions(NumberOptions(MAX_STAT),)
     }
     return modalComponents
 }

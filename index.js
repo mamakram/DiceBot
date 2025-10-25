@@ -27,7 +27,8 @@ import {
   Guild,
   ModalSubmitFields,
   EmbedBuilder,
-  StringSelectMenuOptionBuilder
+  StringSelectMenuOptionBuilder,
+  TextDisplayComponent
 } from "discord.js";
 import {
   createDatabase,
@@ -52,6 +53,16 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
 });
+
+
+/**
+ * @TODO add perks and calculate true skill values 
+ * @TODO add inventory and equipment
+ * @TODO maybe add rivalries
+ * @TODO calculate skill throws
+ * @TODO add slash commands support / major refactor
+ * 
+ */
 
 
 
@@ -160,7 +171,6 @@ async function getInfo(msg) {
   let player = getPlayerFromAuthorId(id,msg.guild.id)
   if (player.length==1){
     let p = getInfoPlayer(player[0]);
-    console.log(p.toString())
     await msg.channel.send({embeds:[p.toEmbed()]})}
   else if(player.length>1) {
     selectPlayer(id,"getInfoPlayer",[])
@@ -230,7 +240,7 @@ async function status(msg) {
   let state = getStatus(msg.guild.id)
   let embed = new EmbedBuilder().setTitle("Statut")
   for (var s of state){
-    embed.addFields({name:s.name,value:s.HP+" PV"},)
+    embed.addFields({name:s.name,value:s.HP+"/"+s.HP_MAX+ " PV"},)
   }
   await msg.channel.send({embeds:[embed]})
 }
@@ -272,7 +282,7 @@ async function ButtonInteraction(interaction){
         modal.setCustomId("statInputModal1")
         modal.setTitle("Stats (1/2)")
         for (let i=0;i<4;i++){
-          modal.addLabelComponents(new LabelBuilder().setLabel(i.toString()+":").setStringSelectMenuComponent(modalComponents[i]),);
+          modal.addLabelComponents(new LabelBuilder().setLabel(modalComponents[i].data.placeholder+":").setStringSelectMenuComponent(modalComponents[i]),);
         }
         break;
       case "openStatModal2":
@@ -281,7 +291,7 @@ async function ButtonInteraction(interaction){
         modal.setCustomId("statInputModal2")
         modal.setTitle("Stats (2/2)")
         for (let i=4;i<modalComponents.length;i++){
-          modal.addLabelComponents(new LabelBuilder().setLabel(i.toString()+":").setStringSelectMenuComponent(modalComponents[i]),);
+          modal.addLabelComponents(new LabelBuilder().setLabel(modalComponents[i].data.placeholder+":").setStringSelectMenuComponent(modalComponents[i]),);
         }
         break;
     }
@@ -298,8 +308,9 @@ async function ModalInteraction(interaction) {
   switch(interaction.customId){
     case "createPlayerModal":
       var name = interaction.fields.getTextInputValue("nameInput");
+      var maxHP = interaction.fields.getStringSelectValues("hpSelect")[0]
       let authorId = interaction.fields.getSelectedMembers("userSelect").first().user.id
-      if (addPlayer(name,authorId,interaction.guild.id)){
+      if (addPlayer(name,authorId,interaction.guild.id,maxHP)){
       var button = new ButtonBuilder()
       .setCustomId("openStatModal1"+"/"+interaction.user.id+"/"+name)
       .setLabel("choisir Stats (1/2)")
@@ -354,6 +365,7 @@ async function ModalInteraction(interaction) {
 
 
 client.on("interactionCreate", async (interaction) => {
+  //Only allow user who requested to press the Button
   if (interaction.isButton() && interaction.customId.includes(interaction.user.id)){
     ButtonInteraction(interaction)
   }

@@ -11,6 +11,7 @@ export function createDatabase() {
         AUTHORID TEXT,
         GUILD TEXT,
         HP INTEGER DEFAULT 0,
+        HP_MAX INTEGER DEFAULT 0,
         STAMINA INTEGER DEFAULT 0,
         COMBAT INTEGER,
         SURVIVAL INTEGER,
@@ -57,14 +58,14 @@ export function createDatabase() {
     ) STRICT`);
 }
 
-export function addPlayer(name,id,guild) {
+export function addPlayer(name,id,guild,maxHP) {
   if (getInfoPlayer(name) !=undefined){
     return false
   }
   let insert = database.prepare(
-    "INSERT INTO players (NAME,AUTHORID,GUILD,HP,STAMINA) VALUES (?,?,?,0,0)",
+    "INSERT INTO players (NAME,AUTHORID,GUILD,HP_MAX,HP,STAMINA) VALUES (?,?,?,?,?,0)",
   );
-  insert.run(name,id,guild);
+  insert.run(name,id,guild,maxHP,maxHP);
   return true
 }
 
@@ -83,12 +84,16 @@ export function updateSkills(stat, name, value) {
 }
 
 export function modifyHP(player,amount){
-  let get = database.prepare("SELECT HP FROM players WHERE NAME = ?");
+  let get = database.prepare("SELECT HP,HP_MAX FROM players WHERE NAME = ?");
   let p = get.all(player)[0];
   if (p){
       let hp = parseInt(p.HP)
+      let hp_max = parseInt(p.HP_MAX)
       if (typeof(amount)=="number" && Number.isInteger(amount) && hp+amount>=0){
           hp += amount
+          if (hp>hp_max){
+            hp=hp_max
+          }
           let update = database.prepare(
           "UPDATE players SET HP = ? WHERE NAME = ?",);
           update.run(hp, player);
@@ -128,11 +133,11 @@ export function getPlayerFromAuthorId(id,guild) {
 }
 
 export function getStatus(guild) {
-  let get = database.prepare("SELECT name,HP FROM players WHERE GUILD=?");
+  let get = database.prepare("SELECT name,HP,HP_MAX FROM players WHERE GUILD=?");
   let p=get.all(guild)
   let ret = []
   for (var player of p){
-    ret.push({"name":player.NAME,"HP":player.HP})
+    ret.push({"name":player.NAME,"HP":player.HP,"HP_MAX":player.HP_MAX})
   }
   return ret;
 }

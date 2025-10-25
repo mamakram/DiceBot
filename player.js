@@ -1,4 +1,3 @@
-import {STATS} from "./utils.js"
 import { EmbedBuilder } from "discord.js";
 
 export class Player {
@@ -74,13 +73,14 @@ endurance;
         { name: 'HP', value: this.hp.toString() },
         { name: '\u200B', value: '\u200B' },
         { name: 'Combat', value: this.combat.toString(), inline: true },
-        { name: 'Perception', value: this.perception.toString(), inline: true },
-        { name: 'Médecine', value: this.medecine.toString(), inline: true },
-        { name: 'Endurance', value: this.endurance.toString(), inline: true },
-        { name: 'Charisme', value: this.charisma.toString(), inline: true },
         { name: 'Survie', value: this.survival.toString(), inline: true },
         { name: 'Mécanique/Bricolage', value: this.mechanic.toString(), inline: true },
+        { name: 'Médecine', value: this.medecine.toString(), inline: true },
         { name: 'Discrétion', value: this.discretion.toString(), inline: true },
+        { name: 'Charisme', value: this.charisma.toString(), inline: true },
+        { name: 'Perception', value: this.perception.toString(), inline: true },
+        { name: 'Endurance', value: this.endurance.toString(), inline: true },
+        
       )
       .setTimestamp();
       return exampleEmbed
