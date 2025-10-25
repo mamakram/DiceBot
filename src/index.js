@@ -6,28 +6,15 @@ const token = process.env["DISCORD_BOT_TOKEN"];
 import {
   Client,
   GatewayIntentBits,
-  Message,
-  Partials,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
   InteractionType,
-  MessageFlags,
   StringSelectMenuBuilder,
-  ComponentType,
-  UserSelectMenuComponent,
   LabelBuilder,
-  GuildMember,
-  User,
-  Collection,
-  Guild,
-  ModalSubmitFields,
   EmbedBuilder,
   StringSelectMenuOptionBuilder,
-  TextDisplayComponent
 } from "discord.js";
 import {
   createDatabase,
@@ -38,7 +25,7 @@ import {
   getStatus,
   getPlayerFromAuthorId,
   modifyHP,
-} from "./database.js";
+} from "./database.ts";
 import { playMusic, disconnect } from "./musicplayer.js";
 import { playerCreationModal, statSelectionModal } from './menus.js';
 
@@ -60,7 +47,7 @@ const client = new Client({
  * @TODO maybe add rivalries
  * @TODO calculate skill throws
  * @TODO add slash commands support / major refactor
- * 
+ * @TODO add comprehensive way to add ennemies/NPC
  */
 
 
@@ -126,7 +113,9 @@ client.on("messageCreate", async (msg) => {
 
 /**
  * show a selection for players based on discord id
- * 
+ * @param {*} msg
+ * @param {*} call String name of function that called
+ * @param {*} params params of the function
  */
 async function selectPlayer(msg,call,params){
   let players = getPlayerFromAuthorId(msg.author.id,msg.guild.id)
@@ -147,6 +136,11 @@ async function selectPlayer(msg,call,params){
   return true
 }
 
+/**
+ * Launch function after a MemberSelect Action to select the user (see SelectPlayer)
+ * @param {*} call String name of function
+ * @param {*} params params of the function
+ */
 function applyFunction(call,params){
   switch(call){
     case "modifyHP":
@@ -166,7 +160,12 @@ function applyFunction(call,params){
  * If multiple players exist, shows a selection menu to choose
  * **/
 async function getInfo(msg) {
-  let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+  let tmp = msg.content.split(" ")
+  if (tmp.length !=2){
+    await msg.channel.send("?info @joueur")
+    return
+  }
+  let id = tmp[1].replace("@",'').replace("<","").replace(">","");
   let player = getPlayerFromAuthorId(id,msg.guild.id)
   if (player.length==1){
     let p = getInfoPlayer(player[0]);
@@ -184,8 +183,13 @@ async function getInfo(msg) {
  * @param {*} msg 
  */
 async function addHP(msg){
-let amount = parseInt(msg.content.split(" ")[2])
-let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+let tmp = msg.content.split(" ")
+if (tmp.length !=3){
+    await msg.channel.send("?ajouterHP @joueur quantité")
+    return
+  }
+let amount = parseInt(tmp[2])??0
+let id = tmp[1].replace("@",'').replace("<","").replace(">","");
 let player = getPlayerFromAuthorId(id,msg.guild.id)
 if (player.length==1){
   modifyHP(player[0],amount);
@@ -199,8 +203,13 @@ else{
 }
 
 async function removeHP(msg){
-let amount = parseInt(msg.content.split(" ")[2])
-let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+let tmp = msg.content.split(" ")
+if (tmp.length !=3){
+    await msg.channel.send("?enleverHP @joueur quantité")
+    return
+  }
+let amount = parseInt(tmp[2])??0
+let id = tmp[1].replace("@",'').replace("<","").replace(">","");
 let player = getPlayerFromAuthorId(id,msg.guild.id)
 if (player.length==1){
   modifyHP(player[0],-amount);
@@ -217,6 +226,11 @@ else{
  * @param {*} msg discord message
  */
 async function deletePlayer(msg) {
+  let tmp = msg.content.split(" ")
+  if (tmp.length !=2){
+    await msg.channel.send("?supprimer @joueur")
+    return
+  }
   let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
   let player = getPlayerFromAuthorId(id,msg.guild.id)
   if (player.length==1){
@@ -239,7 +253,7 @@ async function status(msg) {
   let state = getStatus(msg.guild.id)
   let embed = new EmbedBuilder().setTitle("Statut")
   for (var s of state){
-    embed.addFields({name:s.name,value:s.HP+"/"+s.HP_MAX+ " PV"},)
+    embed.addFields({name:s.name,value:s.HP==0?":skull: ":""+s.HP+"/"+s.HP_MAX+ " PV"},)
   }
   await msg.channel.send({embeds:[embed]})
 }
@@ -358,6 +372,19 @@ async function ModalInteraction(interaction) {
       await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
       await interaction.message.delete();
       break;
+    case "perkInputModal":
+      var name = interaction.message.components[0].components[0].customId.split("/")[2]
+      for(var [customId,f] of interaction.fields.fields.entries()){
+        var value = parseInt(f.values[0])
+        let info = customId.split("/");
+        let name = info[1];
+        let stat = info[0];
+        //addPerk(stat, name, value);
+      }
+      
+      await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
+      await interaction.message.delete();
+      break;
   }
 }
 
@@ -409,6 +436,7 @@ function help(msg) {
         {name:"?nouveau",value:"Créer un nouveau personnage", inline:true},
         {name:"?supprimer @joueur",value:"Supprime le personnage", inline:true},
         {name:"?info @joueur",value:"Donne les infos du personnage", inline:true},
+        {name:"?statut",value:"Statut des joueurs", inline:true},
         {name:"?ajouterPV @joueur quantité",value:"", inline:true},
         {name:"?enleverPV @joueur quantité",value:"", inline:true},
       )
