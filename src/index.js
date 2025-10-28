@@ -15,19 +15,14 @@ import {
   LabelBuilder,
   EmbedBuilder,
   StringSelectMenuOptionBuilder,
+  MessageFlags,
+  ContainerBuilder,
+  ContainerComponent,
+  TextDisplayBuilder,
 } from "discord.js";
-import {
-  createDatabase,
-  updateSkills,
-  addPlayer,
-  getInfoPlayer,
-  removePlayer,
-  getStatus,
-  getPlayerFromAuthorId,
-  modifyHP,
-} from "./database.ts";
+import * as db from "./database.ts";
 import { playMusic, disconnect } from "./musicplayer.js";
-import { playerCreationModal, statSelectionModal } from './menus.js';
+import { playerCreationContainer, playerCreationModal, statSelectionModal,perkCreationModal, perkSelectionContainer, perkCreationContainer } from './menus.js';
 
 // Create Discord client
 const client = new Client({
@@ -41,20 +36,18 @@ const client = new Client({
 });
 
 
-/**
- * @TODO add perks and calculate true skill values 
- * @TODO add inventory and equipment
- * @TODO maybe add rivalries
- * @TODO calculate skill throws
- * @TODO add slash commands support / major refactor
- * @TODO add comprehensive way to add ennemies/NPC
- */
+//TODO add perks and calculate true skill values 
+//TODO add inventory and equipment
+//TODO maybe add rivalries
+//TODO calculate skill throws
+//TODO add slash commands support / major refactor
+//TODO add comprehensive way to add ennemies/NPC
 
 
 
 client.on("clientReady", () => {
   console.log(`Logged in as ${client.user.tag}!`);
-  createDatabase();
+  db.createDatabase();
 });
 
 client.on("messageCreate", async (msg) => {
@@ -63,6 +56,9 @@ client.on("messageCreate", async (msg) => {
   switch (query) {
     case "?r":
       diceroll(msg);
+      break;
+    case "?ajouterPerk":
+      addPerk(msg)
       break;
     case "?info":
       getInfo(msg);
@@ -108,7 +104,13 @@ client.on("messageCreate", async (msg) => {
   }
 });
 
-
+async function test(msg){
+  let name = msg.content.substr(msg.content.split(" ")[0].length+1)
+  await msg.channel.send({
+	components: [playerCreationContainer(msg.author.id,name)],
+	flags: MessageFlags.IsComponentsV2,
+});
+}
 
 
 /**
@@ -118,7 +120,7 @@ client.on("messageCreate", async (msg) => {
  * @param {*} params params of the function
  */
 async function selectPlayer(msg,call,params){
-  let players = getPlayerFromAuthorId(msg.author.id,msg.guild.id)
+  let players = db.getPlayerFromAuthorId(msg.author.id,msg.guild.id)
   let options =[]
   console.log(params)
   for(var p of players){
@@ -143,15 +145,15 @@ async function selectPlayer(msg,call,params){
  */
 function applyFunction(call,params){
   switch(call){
-    case "modifyHP":
-      modifyHP(params[0],parseInt(params[1]))
-      var p=getInfoPlayer(params[0]);
+    case "db.modifyHP":
+      db.modifyHP(params[0],parseInt(params[1]))
+      var p=db.getInfoPlayer(params[0]);
       return params[0]+ " a "+p.getHp()+" PV";
-    case "removePlayer":
-      removePlayer(params[0])
+    case "db.removePlayer":
+      db.removePlayer(params[0])
       return params[0]+ " a été supprimé !";
-    case "getInfoPlayer":
-      var p = getInfoPlayer(params[0])
+    case "db.getInfoPlayer":
+      var p = db.getInfoPlayer(params[0])
       return {embeds:[p.toEmbed()]};
     }   
   }
@@ -166,12 +168,12 @@ async function getInfo(msg) {
     return
   }
   let id = tmp[1].replace("@",'').replace("<","").replace(">","");
-  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  let player = db.getPlayerFromAuthorId(id,msg.guild.id)
   if (player.length==1){
-    let p = getInfoPlayer(player[0]);
+    let p = db.getInfoPlayer(player[0]);
     await msg.channel.send({embeds:[p.toEmbed()]})}
   else if(player.length>1) {
-    selectPlayer(id,"getInfoPlayer",[])
+    selectPlayer(id,"db.getInfoPlayer",[])
   }
   else{
     await msg.channel.send("Ce joueur n'existe pas")
@@ -190,12 +192,12 @@ if (tmp.length !=3){
   }
 let amount = parseInt(tmp[2])??0
 let id = tmp[1].replace("@",'').replace("<","").replace(">","");
-let player = getPlayerFromAuthorId(id,msg.guild.id)
+let player = db.getPlayerFromAuthorId(id,msg.guild.id)
 if (player.length==1){
-  modifyHP(player[0],amount);
-  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+  db.modifyHP(player[0],amount);
+  await msg.channel.send(player[0]+ " a "+db.getInfoPlayer(player[0]).getHp()+" PV")}
 else if(player.length>1) {
-  selectPlayer(msg,"modifyHP",[amount])
+  selectPlayer(msg,"db.modifyHP",[amount])
 }
 else{
   await msg.channel.send("Ce joueur n'existe pas")
@@ -210,12 +212,12 @@ if (tmp.length !=3){
   }
 let amount = parseInt(tmp[2])??0
 let id = tmp[1].replace("@",'').replace("<","").replace(">","");
-let player = getPlayerFromAuthorId(id,msg.guild.id)
+let player = db.getPlayerFromAuthorId(id,msg.guild.id)
 if (player.length==1){
-  modifyHP(player[0],-amount);
-  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+  db.modifyHP(player[0],-amount);
+  await msg.channel.send(player[0]+ " a "+db.getInfoPlayer(player[0]).getHp()+" PV")}
 else if(player.length>1) {
-  selectPlayer(msg,"modifyHP",[-amount])
+  selectPlayer(msg,"db.modifyHP",[-amount])
 }
 else{
   await msg.channel.send("Ce joueur n'existe pas")
@@ -232,12 +234,12 @@ async function deletePlayer(msg) {
     return
   }
   let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
-  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  let player = db.getPlayerFromAuthorId(id,msg.guild.id)
   if (player.length==1){
-    removePlayer(player[0]);
+    db.removePlayer(player[0]);
     await msg.channel.send(player[0]+ " a été supprimé !")}
   else if(player.length>1) {
-    selectPlayer(msg,"removePlayer",[])
+    selectPlayer(msg,"db.removePlayer",[])
   }
   else{
     await msg.channel.send("Ce joueur n'existe pas")
@@ -250,7 +252,7 @@ async function deletePlayer(msg) {
  * @param {*} msg discord message
  */
 async function status(msg) {
-  let state = getStatus(msg.guild.id)
+  let state = db.getStatus(msg.guild.id)
   let embed = new EmbedBuilder().setTitle("Statut")
   for (var s of state){
     embed.addFields({name:s.name,value:s.HP==0?":skull: ":""+s.HP+"/"+s.HP_MAX+ " PV"},)
@@ -258,6 +260,38 @@ async function status(msg) {
   await msg.channel.send({embeds:[embed]})
 }
 
+
+async function addPerk(msg) {
+  /*let button = new ButtonBuilder()
+    .setCustomId("openPerkModal"+'/'+msg.author.id)
+    .setLabel("Remplir fiche")
+    .setStyle(ButtonStyle.Primary);
+  let row = new ActionRowBuilder().addComponents(button);
+  await msg.reply({
+    content: "Remplissez la fiche de perk:",
+    components: [row],
+  });*/
+  let tmp = msg.content.split(" ")
+  if (tmp.length !=2){
+    await msg.channel.send("?ajouterPerk @joueur")
+    return
+  }
+  let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+  let player = db.getPlayerFromAuthorId(id,msg.guild.id)
+  if (player.length==1){
+    let container = perkSelectionContainer(msg.author.id,player[0]);
+    await msg.reply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2,
+    })}
+  else if(player.length>1) {
+    selectPlayer(msg,"addPerk",[])
+  }
+  else{
+    await msg.channel.send("Ce joueur n'existe pas")
+  }
+
+}
 /**
  * create new player
  * @param {*} msg discord message
@@ -288,7 +322,40 @@ async function ButtonInteraction(interaction){
     switch(interactionId){ //handle 3 cases
       case "openPlayerModal":
         modal = playerCreationModal();
+        await interaction.showModal(modal);
         break;
+      case "openPerkModal":
+        modal = perkCreationModal();
+        await interaction.showModal(modal);
+        break;
+      case "openPerkContainer":
+        var name = interaction.customId.split("/")[2]
+        var container = perkCreationContainer(interaction.user.id,name);
+        await interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        })
+        break;
+      case "perkSubmit":
+       //TODO handle submission
+       //TODO add String input modal for name and condition
+       //TODO add adding modifiers and dynamically update container
+        var container = interaction.message.components[0]
+        container.components.push(new TextDisplayBuilder()
+    .setContent(
+			'Bienvenue **'+name+'** !, choisis le joueur associé à ce personnage et ses PV max:',
+		),
+	)
+        //db.addPerk()
+        //db.addModifier()
+        await interaction.message.edit({components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        })
+        break;
+      case "playerSubmit":
+        interaction.reply("Personnage créé !")
+        console.log(interaction.message.components)
+        interaction.message.delete()
       case "openStatModal1":
         var name = interaction.customId.split("/")[2]
         var modalComponents = statSelectionModal(name)
@@ -297,6 +364,7 @@ async function ButtonInteraction(interaction){
         for (let i=0;i<4;i++){
           modal.addLabelComponents(new LabelBuilder().setLabel(modalComponents[i].data.placeholder+":").setStringSelectMenuComponent(modalComponents[i]),);
         }
+        await interaction.showModal(modal);
         break;
       case "openStatModal2":
         var name = interaction.customId.split("/")[2]
@@ -306,9 +374,9 @@ async function ButtonInteraction(interaction){
         for (let i=4;i<modalComponents.length;i++){
           modal.addLabelComponents(new LabelBuilder().setLabel(modalComponents[i].data.placeholder+":").setStringSelectMenuComponent(modalComponents[i]),);
         }
+        await interaction.showModal(modal);
         break;
     }
-    await interaction.showModal(modal);
     return;
 }
 
@@ -323,7 +391,7 @@ async function ModalInteraction(interaction) {
       var name = interaction.fields.getTextInputValue("nameInput");
       var maxHP = interaction.fields.getStringSelectValues("hpSelect")[0]
       let authorId = interaction.fields.getSelectedMembers("userSelect").first().user.id
-      if (addPlayer(name,authorId,interaction.guild.id,maxHP)){
+      if (db.addPlayer(name,authorId,interaction.guild.id,maxHP)){
       var button = new ButtonBuilder()
       .setCustomId("openStatModal1"+"/"+interaction.user.id+"/"+name)
       .setLabel("choisir Stats (1/2)")
@@ -346,7 +414,7 @@ async function ModalInteraction(interaction) {
         let info = customId.split("/");
         let name = info[1];
         let stat = info[0];
-        updateSkills(stat, name, value);
+        db.updateSkills(stat, name, value);
       }
       
       var button = new ButtonBuilder()
@@ -366,10 +434,10 @@ async function ModalInteraction(interaction) {
         let info = customId.split("/");
         let name = info[1];
         let stat = info[0];
-        updateSkills(stat, name, value);
+        db.updateSkills(stat, name, value);
       }
       
-      await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
+      await interaction.reply({embeds:[db.getInfoPlayer(name).toEmbed()]})
       await interaction.message.delete();
       break;
     case "perkInputModal":
@@ -382,7 +450,7 @@ async function ModalInteraction(interaction) {
         //addPerk(stat, name, value);
       }
       
-      await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
+      await interaction.reply({embeds:[db.getInfoPlayer(name).toEmbed()]})
       await interaction.message.delete();
       break;
   }
@@ -402,7 +470,6 @@ client.on("interactionCreate", async (interaction) => {
   }else if(interaction.isStringSelectMenu()){
     var selected = interaction.values[0];
     var info = interaction.customId.split("/");
-    console.log(info)
     await interaction.reply(applyFunction(info[2],[selected].concat(JSON.parse("["+info[3]+"]"))))
     await interaction.message.delete()
   }
