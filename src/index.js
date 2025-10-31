@@ -22,7 +22,7 @@ import {
 } from "discord.js";
 import * as db from "./database.ts";
 import { playMusic, disconnect } from "./musicplayer.js";
-import { playerCreationContainer, playerCreationModal, statSelectionModal,perkCreationModal, perkSelectionContainer, perkCreationContainer } from './menus.js';
+import { playerCreationContainer, playerCreationModal, statSelectionModal,perkCreationModal, perkSelectionContainer, perkCreationContainer, modifierComponent, stringInputModal } from './menus.js';
 
 // Create Discord client
 const client = new Client({
@@ -324,8 +324,14 @@ async function ButtonInteraction(interaction){
         modal = playerCreationModal();
         await interaction.showModal(modal);
         break;
-      case "openPerkModal":
-        modal = perkCreationModal();
+      case "perkName":
+        modal = stringInputModal("Nom de la perk","perkName")
+        await interaction.showModal(modal);
+        break;
+        /*var container= interaction.message.components[0]
+        container.components[0].accessory.label = */
+      case "condition":
+        modal = stringInputModal("Condition de la perk","condition")
         await interaction.showModal(modal);
         break;
       case "openPerkContainer":
@@ -336,21 +342,30 @@ async function ButtonInteraction(interaction){
         flags: MessageFlags.IsComponentsV2,
         })
         break;
+      case "addModifier":
+        var container = interaction.message.components[0]
+        var num  =parseInt(interaction.customId.split("/")[2])
+        var button = container.components.pop() //validate button
+        container.components.pop() //previous add button
+        container.components = container.components.concat(modifierComponent(interaction.user.id,(num+1).toString()))
+        container.components.push(button)
+        await interaction.message.edit({components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        })
+        await interaction.deferUpdate()
+        break;
       case "perkSubmit":
        //TODO handle submission
        //TODO add String input modal for name and condition
        //TODO add adding modifiers and dynamically update container
         var container = interaction.message.components[0]
-        container.components.push(new TextDisplayBuilder()
-    .setContent(
-			'Bienvenue **'+name+'** !, choisis le joueur associé à ce personnage et ses PV max:',
-		),
-	)
-        //db.addPerk()
+        console.log(container)
+        var perkName = interaction.message.components[0].components[0].accessory.data.label
+        var condition = interaction.message.components[0].components[1].accessory.data.style==2?interaction.message.components[0].components[1].accessory.data.label:""
+        db.addPerk(perkName,condition)
+
         //db.addModifier()
-        await interaction.message.edit({components: [container],
-        flags: MessageFlags.IsComponentsV2,
-        })
+        await interaction.message.delete()
         break;
       case "playerSubmit":
         interaction.reply("Personnage créé !")
@@ -380,6 +395,32 @@ async function ButtonInteraction(interaction){
     return;
 }
 
+async function stringInput(interaction){
+    let stringName = interaction.components[0].component.customId
+    let value = interaction.components[0].component.value
+    switch(stringName){
+      case "perkName":
+        interaction.message.components[0].components[0].accessory.data.label=value
+        interaction.message.components[0].components[0].accessory.data.style=2
+        interaction.message.components[0].components[0].accessory.data.disabled=true
+        await interaction.message.edit({components: [interaction.message.components[0]],
+        flags: MessageFlags.IsComponentsV2,
+        })
+        break;
+      case "condition":
+        interaction.message.components[0].components[1].accessory.data.label=value
+        interaction.message.components[0].components[1].accessory.data.style=2
+        interaction.message.components[0].components[1].accessory.data.disabled=true
+        await interaction.message.edit({components: [interaction.message.components[0]],
+        flags: MessageFlags.IsComponentsV2,
+        })
+        break;
+
+
+    }
+}
+
+
 /**
  * Handler for interaction with Modals, updates values in database
  * Information is passed through customId of the button object
@@ -407,6 +448,10 @@ async function ModalInteraction(interaction) {
       });
     }
     break;
+    case "stringInputModal":
+      stringInput(interaction);
+      interaction.deferUpdate();
+      break;
     case "statInputModal1":
       var name = interaction.message.components[0].components[0].customId.split("/")[2]
       for(var [customId,f] of interaction.fields.fields.entries()){
@@ -467,11 +512,13 @@ client.on("interactionCreate", async (interaction) => {
     interaction.type === InteractionType.ModalSubmit
   ) {
     ModalInteraction(interaction)
-  }else if(interaction.isStringSelectMenu()){
+  }else if(interaction.isStringSelectMenu() && interaction.customId.includes("charSelect")){
     var selected = interaction.values[0];
     var info = interaction.customId.split("/");
     await interaction.reply(applyFunction(info[2],[selected].concat(JSON.parse("["+info[3]+"]"))))
     await interaction.message.delete()
+  }else{
+    interaction.deferUpdate()
   }
 });
 

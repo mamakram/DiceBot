@@ -97,35 +97,48 @@ export function perkCreationContainer(id,name){
   .addTextDisplayComponents(new TextDisplayBuilder()
             .setContent("Condition (optionnel) :"),
         )
-  .setButtonAccessory(new ButtonBuilder().setCustomId("condition"+id+"/"+name).setLabel("Choisir Condition").setStyle(ButtonStyle.Primary)),)
-  .addActionRowComponents(new ActionRowBuilder().addComponents(
-      new StringSelectMenuBuilder()//TODO move to separate function
-      .setCustomId("statSelect1")
-      .setPlaceholder("Stat")
-      .addOptions(statOptions())),
-      new ActionRowBuilder().addComponents(
-      new  StringSelectMenuBuilder()
-      .setCustomId("valueSelect1")
-      .setPlaceholder("valeur")
-      .addOptions(numberOptions(5,-5,true))),
-      new ActionRowBuilder().addComponents(
-      new StringSelectMenuBuilder()
-      .setCustomId("statSelect2")
-      .setPlaceholder("Stat")
-      .addOptions(statOptions())),
-      new ActionRowBuilder().addComponents(
-      new  StringSelectMenuBuilder()
-      .setCustomId("valueSelect2")
-      .setPlaceholder("valeur")
-      .addOptions(numberOptions(5,-5,true)),),
+  .setButtonAccessory(new ButtonBuilder().setCustomId("condition/"+id+"/"+name).setLabel("Choisir Condition").setStyle(ButtonStyle.Primary)),);
+  container.components = container.components.concat(modifierComponent(id,0));
+  container.addActionRowComponents(
       new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("perkSubmit/"+id+"/"+name).setLabel("Valider").setStyle(ButtonStyle.Primary)),
     )
   return container
 }
 
-export function stringInputModal(){
-  //TODO write this
+export function modifierComponent(id,num){
+  let ret =[]
+      ret.push(new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+      .setCustomId("statSelect/"+num)
+      .setPlaceholder("Stat")
+      .addOptions(statOptions())))
+    
+      ret.push(new ActionRowBuilder().addComponents(
+      new  StringSelectMenuBuilder()
+      .setCustomId("valueSelect/"+num)
+      .setPlaceholder("valeur")
+      .addOptions(numberOptions(5,-5,true))))
+      if(num<3){
+      ret.push(new SectionBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder()
+            .setContent('\u200B'),
+        )
+  .setButtonAccessory(new ButtonBuilder().setCustomId("addModifier/"+id+"/"+num).setLabel("Ajouter").setStyle(ButtonStyle.Primary)))}
+  return ret
+}
+
+export function stringInputModal(name,string_id){
+  const modal = new ModalBuilder()
+      .setCustomId("stringInputModal")
+      .setTitle(name)
+      .addLabelComponents(new LabelBuilder().setLabel("Entrez "+name+" :").setTextInputComponent(new TextInputBuilder().
+        setCustomId(string_id)
+      .setPlaceholder(name)
+      .setStyle(TextInputStyle.Short)
+      .setMinLength(1)
+      .setRequired(false)))
+    return modal
 }
 
 export function playerCreationContainer(id,name){

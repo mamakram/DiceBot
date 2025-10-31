@@ -170,14 +170,14 @@ export function addPlayerPerk(perkName:string,playerName:string){
   p = get.all(playerName)[0] as {KEY:number}
   let player = p.KEY
   let insert = database.prepare(
-    "INSERT INTO playerperks (player_id)(perk_id) values (?,?)",
+    "INSERT INTO playerperks (player_id,perk_id) values (?,?)",
   );
   insert.run(perk,player);
 }
 
 export function addPerk(perkName:string,condition:string){
     let insert = database.prepare(
-    "INSERT INTO perks (name)(condition) values (?,?)",
+    "INSERT INTO perks (name,condition) values (?,?)",
   );
   insert.run(perkName,condition);
 }
@@ -187,7 +187,7 @@ export function addModifier(perkName:number,stat:string,value:number){
   let p = get.all(perkName)[0] as {KEY:number}
   let perk = p.KEY
   let insert = database.prepare(
-    "INSERT INTO modifiers (perk_id)(name)(value) values (?,?;?)",
+    "INSERT INTO modifiers (perk_id,name,value) values (?,?;?)",
   );
   insert.run(perk,stat,value);
 
