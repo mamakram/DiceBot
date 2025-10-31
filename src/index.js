@@ -22,7 +22,7 @@ import {
 } from "discord.js";
 import * as db from "./database.ts";
 import { playMusic, disconnect } from "./musicplayer.js";
-import { playerCreationContainer, playerCreationModal, statSelectionModal,perkCreationModal, perkSelectionContainer, perkCreationContainer, modifierComponent, stringInputModal } from './menus.js';
+import { playerCreationContainer, playerCreationModal, statSelectionModal, perkSelectionContainer, perkCreationContainer, modifierComponent, stringInputModal } from './menus.js';
 
 // Create Discord client
 const client = new Client({
@@ -328,8 +328,6 @@ async function ButtonInteraction(interaction){
         modal = stringInputModal("Nom de la perk","perkName")
         await interaction.showModal(modal);
         break;
-        /*var container= interaction.message.components[0]
-        container.components[0].accessory.label = */
       case "condition":
         modal = stringInputModal("Condition de la perk","condition")
         await interaction.showModal(modal);
@@ -341,9 +339,11 @@ async function ButtonInteraction(interaction){
         components: [container],
         flags: MessageFlags.IsComponentsV2,
         })
+        await interaction.message.delete()
         break;
       case "addModifier":
         var container = interaction.message.components[0]
+        console.log(container.components[2].components)
         var num  =parseInt(interaction.customId.split("/")[2])
         var button = container.components.pop() //validate button
         container.components.pop() //previous add button
@@ -355,16 +355,19 @@ async function ButtonInteraction(interaction){
         await interaction.deferUpdate()
         break;
       case "perkSubmit":
-       //TODO handle submission
-       //TODO add String input modal for name and condition
-       //TODO add adding modifiers and dynamically update container
         var container = interaction.message.components[0]
         console.log(container)
-        var perkName = interaction.message.components[0].components[0].accessory.data.label
-        var condition = interaction.message.components[0].components[1].accessory.data.style==2?interaction.message.components[0].components[1].accessory.data.label:""
+        var perkName = container.components[0].accessory.data.label
+        var condition = container.components[1].accessory.data.style==2?container.components[1].accessory.data.label:""
         db.addPerk(perkName,condition)
-
-        //db.addModifier()
+        var numModifiers = Math.ceil((container.components.length-4)/2)
+        console.log(numModifiers)
+        for(let i = 0;i<numModifiers;i++){
+          var stat = container.components[2+i*2].values[0]
+          var value = container.components[3+i*2].values[0]
+          db.addModifier(perkName,stat,value)
+        }
+        await interaction.reply("Perk ajoutée !")
         await interaction.message.delete()
         break;
       case "playerSubmit":
@@ -517,6 +520,14 @@ client.on("interactionCreate", async (interaction) => {
     var info = interaction.customId.split("/");
     await interaction.reply(applyFunction(info[2],[selected].concat(JSON.parse("["+info[3]+"]"))))
     await interaction.message.delete()
+  }else if(interaction.isStringSelectMenu() && interaction.customId.includes("perkSelect")) {
+    var selected = interaction.values[0];
+    if (selected){//undefined when no perks exist
+      var info = interaction.customId.split("/");
+      db.addPlayerPerk(selected,info[1])
+      await interaction.message.delete()
+      await interaction.reply("Perk ajoutée !")
+    }
   }else{
     interaction.deferUpdate()
   }

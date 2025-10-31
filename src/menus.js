@@ -72,7 +72,7 @@ export function perkSelectionContainer(id,name){
         )
   .addActionRowComponents(new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
-          .setCustomId("perkSelect")
+          .setCustomId("perkSelect/"+name)
           .setPlaceholder("perks")
           .addOptions(perks.length==0?[new StringSelectMenuOptionBuilder().setLabel("Pas de perks préexistantes").setValue("undefined")]:perks),
         ),)
@@ -113,12 +113,14 @@ export function modifierComponent(id,num){
       .setCustomId("statSelect/"+num)
       .setPlaceholder("Stat")
       .addOptions(statOptions())))
+      .setRequired(true)
     
       ret.push(new ActionRowBuilder().addComponents(
       new  StringSelectMenuBuilder()
       .setCustomId("valueSelect/"+num)
       .setPlaceholder("valeur")
       .addOptions(numberOptions(5,-5,true))))
+      .setRequired(true)
       if(num<3){
       ret.push(new SectionBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder()
@@ -196,50 +198,4 @@ export function statSelectionModal(name){
         modalComponents[i].addOptions(numberOptions,statOptions(MAX_STAT),)
     }
     return modalComponents
-}
-
-export function perkCreationModal(){
-    const modal = new ModalBuilder()
-      .setCustomId("create")
-      .setTitle("Fiche de personnage");
-    modal.addLabelComponents(
-      new LabelBuilder()
-      .setLabel("Condition")
-      .setTextInputComponent(new TextInputBuilder()
-      .setCustomId("modifier1")
-      .setPlaceholder("Condition (optionnel)")
-      .setStyle(TextInputStyle.Short)
-      .setMinLength(1)
-      .setRequired(false)),
-      new LabelBuilder()
-      .setLabel("Modification 1")
-      .setStringSelectMenuComponent(new StringSelectMenuBuilder()
-      .setCustomId("statSelect1")
-      .setPlaceholder("Stat")
-      .addOptions(statOptions())),
-      new LabelBuilder()
-      .setLabel('\u200B')
-      .setStringSelectMenuComponent(new  StringSelectMenuBuilder()
-      .setCustomId("valueSelect1")
-      .setPlaceholder("valeur")
-      .addOptions(numberOptions(5,-5,true))),
-      new LabelBuilder()
-      .setLabel("Modification 2")
-      .setStringSelectMenuComponent(new StringSelectMenuBuilder()
-      .setCustomId("statSelect2")
-      .setPlaceholder("Stat")
-      .addOptions(statOptions())),
-      new LabelBuilder()
-      .setLabel('\u200B')
-      .setStringSelectMenuComponent(new  StringSelectMenuBuilder()
-      .setCustomId("valueSelect2")
-      .setPlaceholder("valeur")
-      .addOptions(numberOptions(5,-5,true))),
-    )
-    return modal
-}
-
-
-export function modifierInputModal(){
-
 }

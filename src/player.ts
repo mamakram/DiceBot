@@ -59,7 +59,7 @@ export class Player {
   }
   toEmbed(){
     
-    const exampleEmbed = new EmbedBuilder()
+    const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle(this.name)
       .addFields(
@@ -74,8 +74,12 @@ export class Player {
         { name: "Perception", value: this.skills.get("perception")?.toString() ?? "0", inline: true },
         { name: "Endurance", value: this.skills.get("endurance")?.toString() ?? "0", inline: true },
       )
-      .setTimestamp();
-      return exampleEmbed
+      
+      for (var perk of this.perks){
+        embed.addFields(perk.toEmbed())
+      }
+      embed.setTimestamp();
+      return embed
   }
   
 }

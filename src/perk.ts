@@ -1,15 +1,14 @@
 import { Modifier } from "./modifier.ts";
-
 export class Perk{
-    name:String;
+    name:string;
     modifiers:Array<Modifier>;
     
-    constructor(name:String,modifiers:Array<Modifier>){
+    constructor(name:string,modifiers:Array<Modifier>){
         this.name = name;
         this.modifiers = modifiers;
     }
 
-    getName():String{
+    getName():string{
         return this.name
     }
     getModifiers():Array<Modifier>{
@@ -17,7 +16,7 @@ export class Perk{
     }
     toEmbed(){
         let ret=[]
-        ret.push({name:this.name,value:""})
+        ret.push({name:this.name,value:"",inline:false})
         for (var mod of this.modifiers){
             let value = mod.getValue().toString()
             if (mod.getValue()>0){

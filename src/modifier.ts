@@ -8,7 +8,7 @@ export class Modifier{
     name:string //stat name
     value:number
     conditional:Boolean
-    condition :String
+    condition :string
 
     constructor(name:string,value:number,conditional:Boolean=false,condition=""){
         this.name = name;
@@ -26,7 +26,7 @@ export class Modifier{
     isConditional():Boolean{
         return this.conditional
     }
-    getCondition():String{
+    getCondition():string{
         return this.condition
     }
 }

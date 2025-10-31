@@ -125,6 +125,7 @@ export function modifyHP(player:string,amount:number){
 }
 
 export function getInfoPlayer(name:string) {
+  //TODO add perk and modifier fetch
   let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
   let p = get.all(name)[0] as {NAME:string,HP:number;COMBAT:number;SURVIVAL:number;MECHANIC:number;MEDECINE:number;DISCRETION:number;CHARISMA:number;PERCEPTION:number;ENDURANCE:number}|undefined;
   if (p){
@@ -182,7 +183,7 @@ export function addPerk(perkName:string,condition:string){
   insert.run(perkName,condition);
 }
 
-export function addModifier(perkName:number,stat:string,value:number){
+export function addModifier(perkName:string,stat:string,value:number){
   let get = database.prepare("SELECT key from perks WHERE name =?")
   let p = get.all(perkName)[0] as {KEY:number}
   let perk = p.KEY
