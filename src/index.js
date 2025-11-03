@@ -8,6 +8,7 @@ import {
   GatewayIntentBits,
   ActionRowBuilder,
   ModalBuilder,
+<<<<<<< HEAD
   StringSelectMenuBuilder,
   EmbedBuilder,
   StringSelectMenuOptionBuilder,
@@ -15,9 +16,17 @@ import {
   Collection,
   REST,
   Routes,
+=======
+  InteractionType,
+  StringSelectMenuBuilder,
+  LabelBuilder,
+  EmbedBuilder,
+  StringSelectMenuOptionBuilder,
+>>>>>>> main
 } from "discord.js";
 import * as db from "./database.ts";
 import {
+<<<<<<< HEAD
   playerCreationContainer,
   perkSelectionContainer,
   perkCreationContainer,
@@ -30,6 +39,19 @@ import { STATS } from "./utils.ts";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+=======
+  createDatabase,
+  updateSkills,
+  addPlayer,
+  getInfoPlayer,
+  removePlayer,
+  getStatus,
+  getPlayerFromAuthorId,
+  modifyHP,
+} from "./database.ts";
+import { playMusic, disconnect } from "./musicplayer.js";
+import { playerCreationModal, statSelectionModal } from './menus.js';
+>>>>>>> main
 
 // Create Discord client
 const client = new Client({
@@ -53,6 +75,7 @@ const commandFiles = fs
 
 const commands = [];
 
+<<<<<<< HEAD
 //TODO add perks and calculate true skill values
 //TODO add inventory and equipment
 //TODO maybe add rivalries
@@ -60,6 +83,16 @@ const commands = [];
 //TODO add slash commands support / major refactor
 //TODO add comprehensive way to add ennemies/NPC
 //TODO add profile pic
+=======
+/**
+ * @TODO add perks and calculate true skill values 
+ * @TODO add inventory and equipment
+ * @TODO maybe add rivalries
+ * @TODO calculate skill throws
+ * @TODO add slash commands support / major refactor
+ * @TODO add comprehensive way to add ennemies/NPC
+ */
+>>>>>>> main
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
@@ -168,6 +201,7 @@ async function selectPlayer(msg, call, params) {
  * @param {*} call String name of function
  * @param {*} params params of the function
  */
+<<<<<<< HEAD
 function applyFunction(call, params) {
   switch (call) {
     case "db.modifyHP":
@@ -180,6 +214,21 @@ function applyFunction(call, params) {
     case "db.getInfoPlayer":
       var p = db.getInfoPlayer(params[0]);
       return { embeds: [p.toEmbed()] };
+=======
+function applyFunction(call,params){
+  switch(call){
+    case "modifyHP":
+      modifyHP(params[0],parseInt(params[1]))
+      var p=getInfoPlayer(params[0]);
+      return params[0]+ " a "+p.getHp()+" PV";
+    case "removePlayer":
+      removePlayer(params[0])
+      return params[0]+ " a été supprimé !";
+    case "getInfoPlayer":
+      var p = getInfoPlayer(params[0])
+      return {embeds:[p.toEmbed()]};
+    }   
+>>>>>>> main
   }
 }
 
@@ -187,10 +236,25 @@ function applyFunction(call, params) {
  * If multiple players exist, shows a selection menu to choose
  * **/
 async function getInfo(msg) {
+<<<<<<< HEAD
   let tmp = msg.content.split(" ");
   if (tmp.length != 2) {
     await msg.channel.send("?info @joueur");
     return;
+=======
+  let tmp = msg.content.split(" ")
+  if (tmp.length !=2){
+    await msg.channel.send("?info @joueur")
+    return
+  }
+  let id = tmp[1].replace("@",'').replace("<","").replace(">","");
+  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  if (player.length==1){
+    let p = getInfoPlayer(player[0]);
+    await msg.channel.send({embeds:[p.toEmbed()]})}
+  else if(player.length>1) {
+    selectPlayer(id,"getInfoPlayer",[])
+>>>>>>> main
   }
   let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
   let player = db.getPlayerFromAuthorId(id, msg.guild.id);
@@ -208,6 +272,7 @@ async function getInfo(msg) {
  * add HP
  * @param {*} msg
  */
+<<<<<<< HEAD
 async function addHP(msg) {
   let tmp = msg.content.split(" ");
   if (tmp.length != 3) {
@@ -248,16 +313,71 @@ async function removeHP(msg) {
   } else {
     await msg.channel.send("Ce joueur n'existe pas");
   }
+=======
+async function addHP(msg){
+let tmp = msg.content.split(" ")
+if (tmp.length !=3){
+    await msg.channel.send("?ajouterHP @joueur quantité")
+    return
+  }
+let amount = parseInt(tmp[2])??0
+let id = tmp[1].replace("@",'').replace("<","").replace(">","");
+let player = getPlayerFromAuthorId(id,msg.guild.id)
+if (player.length==1){
+  modifyHP(player[0],amount);
+  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+else if(player.length>1) {
+  selectPlayer(msg,"modifyHP",[amount])
+}
+else{
+  await msg.channel.send("Ce joueur n'existe pas")
+}
+}
+
+async function removeHP(msg){
+let tmp = msg.content.split(" ")
+if (tmp.length !=3){
+    await msg.channel.send("?enleverHP @joueur quantité")
+    return
+  }
+let amount = parseInt(tmp[2])??0
+let id = tmp[1].replace("@",'').replace("<","").replace(">","");
+let player = getPlayerFromAuthorId(id,msg.guild.id)
+if (player.length==1){
+  modifyHP(player[0],-amount);
+  await msg.channel.send(player[0]+ " a "+getInfoPlayer(player[0]).getHp()+" PV")}
+else if(player.length>1) {
+  selectPlayer(msg,"modifyHP",[-amount])
+}
+else{
+  await msg.channel.send("Ce joueur n'existe pas")
+}
+>>>>>>> main
 }
 /**
  * Delete a player associated to discord id of sender
  * @param {*} msg discord message
  */
 async function deletePlayer(msg) {
+<<<<<<< HEAD
   let tmp = msg.content.split(" ");
   if (tmp.length != 2) {
     await msg.channel.send("?supprimer @joueur");
     return;
+=======
+  let tmp = msg.content.split(" ")
+  if (tmp.length !=2){
+    await msg.channel.send("?supprimer @joueur")
+    return
+  }
+  let id = msg.content.split(" ")[1].replace("@",'').replace("<","").replace(">","");
+  let player = getPlayerFromAuthorId(id,msg.guild.id)
+  if (player.length==1){
+    removePlayer(player[0]);
+    await msg.channel.send(player[0]+ " a été supprimé !")}
+  else if(player.length>1) {
+    selectPlayer(msg,"removePlayer",[])
+>>>>>>> main
   }
   let id = msg.content
     .split(" ")[1]
@@ -280,6 +400,7 @@ async function deletePlayer(msg) {
  * @param {*} msg discord message
  */
 async function status(msg) {
+<<<<<<< HEAD
   let state = db.getStatus(msg.guild.id);
   let embed = new EmbedBuilder().setTitle("Statut");
   for (var s of state) {
@@ -287,6 +408,12 @@ async function status(msg) {
       name: s.name,
       value: s.HP == 0 ? ":skull: " : "" + s.HP + "/" + s.HP_MAX + " PV",
     });
+=======
+  let state = getStatus(msg.guild.id)
+  let embed = new EmbedBuilder().setTitle("Statut")
+  for (var s of state){
+    embed.addFields({name:s.name,value:s.HP==0?":skull: ":""+s.HP+"/"+s.HP_MAX+ " PV"},)
+>>>>>>> main
   }
   await msg.channel.send({ embeds: [embed] });
 }
@@ -534,6 +661,19 @@ async function ModalInteraction(interaction) {
       stringInput(interaction);
       interaction.deferUpdate();
       break;
+    case "perkInputModal":
+      var name = interaction.message.components[0].components[0].customId.split("/")[2]
+      for(var [customId,f] of interaction.fields.fields.entries()){
+        var value = parseInt(f.values[0])
+        let info = customId.split("/");
+        let name = info[1];
+        let stat = info[0];
+        //addPerk(stat, name, value);
+      }
+      
+      await interaction.reply({embeds:[getInfoPlayer(name).toEmbed()]})
+      await interaction.message.delete();
+      break;
   }
 }
 async function stringSelectInteraction(interaction) {
@@ -622,4 +762,105 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+<<<<<<< HEAD
+=======
+/**
+ * Display help message
+ * @param {*} msg 
+ */
+function help(msg) {
+  let embed = new EmbedBuilder().setColor(0x0099ff)
+      .setTitle("Dicebot")
+      .setDescription("Bot de lancer de dés et fonctionnalités JDR")
+      .addFields(
+        { name: "Lancer de dés", value: "" },
+        {name:"?r _d_",value: "jette un dé. Exemple: ?r 2d6"},
+        { name: '\u200B', value: '\u200B' },
+      )
+      .addFields(
+        { name: "Sons", value: "" },
+        {name:"?sad",value:"",inline:true},
+        {name:"?fight",value:"",inline:true},
+        {name:"?brook",value:"", inline:true},
+        {name:"?smash",value:"", inline:true},
+        {name:"?ultra",value:"", inline:true},
+        {name:"?filler",value:"", inline:true},
+        {name:"?leave",value:"déconnecte le bot du channel vocal", inline:true},
+        { name: '\u200B', value: '\u200B' },)
+      .addFields(
+        { name: "Fiches", value: "" },
+        {name:"?nouveau",value:"Créer un nouveau personnage", inline:true},
+        {name:"?supprimer @joueur",value:"Supprime le personnage", inline:true},
+        {name:"?info @joueur",value:"Donne les infos du personnage", inline:true},
+        {name:"?statut",value:"Statut des joueurs", inline:true},
+        {name:"?ajouterPV @joueur quantité",value:"", inline:true},
+        {name:"?enleverPV @joueur quantité",value:"", inline:true},
+      )
+  msg.channel.send(
+    {embeds:[embed]}
+  );
+}
+
+/**
+ * Diceroll function, based on msg parameters roll dice and send message
+ * @param {*} msg 
+ */
+async function diceroll(msg) {
+  let array = msg.content.split(" ");
+  if (array.length != 2) {
+    msg.channel.send(`Error. Wrong Syntax`);
+  } else {
+    let content = array[1];
+    let array2 = content.split("d");
+    if (array2.length != 2) {
+      msg.channel.send(`Error. Wrong Syntax`);
+    } else {
+      let amount = parseInt(array2[0]);
+      let cap = parseInt(array2[1]);
+      let sum = 0;
+      let critic_success = Math.floor((cap / 100) * 10);
+      let critic_fail = Math.floor((cap / 100) * 90 + 1);
+      let output =
+        `<@${msg.author.id}> :game_die:` +
+        "```ansi\n" +
+        "\u001b[0;37mResult : ";
+      let counter = amount;
+      while (counter > 0) {
+        if (output.length > 900) {
+          output += "..```";
+          try {
+            await msg.channel.send(output);
+          } catch (exception) {}
+          output = "```ansi\n" + "\u001b[0;37m ..";
+        }
+        let die = Math.floor(Math.random() * cap) + 1;
+        if (die <= critic_success) {
+          output += "\u001b[1;32m" + die + "\u001b[0;37m";
+        } else if (die >= critic_fail) {
+          output += "\u001b[1;31m" + die + "\u001b[0;37m";
+        } else {
+          output += die;
+        }
+        if (counter > 1) {
+          output += ", ";
+        }
+        sum += die;
+        counter -= 1;
+      }
+      output += " (" + amount + "d" + cap + ")";
+      if (amount > 1) {
+        output += "\nSum: " + sum;
+      }
+      output += "```";
+      try {
+        await msg.delete();
+        await msg.channel.send(output);
+      } catch (exception) {
+        await msg.channel.send("Error :slight_frown:");
+      }
+    }
+  }
+}
+
+>>>>>>> main
 client.login(token);

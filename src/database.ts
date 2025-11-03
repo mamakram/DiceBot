@@ -1,10 +1,14 @@
 // SQLite (sync)
 import { DatabaseSync } from "node:sqlite";
 import { Player } from "./player.ts";
+<<<<<<< HEAD
 import { Perk } from "./perk.ts";
 const database = new DatabaseSync(
   new URL("../data.db", import.meta.url).pathname
 );
+=======
+const database = new DatabaseSync(new URL('../data.db', import.meta.url).pathname);
+>>>>>>> main
 
 export function createDatabase() {
   database.exec(`
@@ -38,6 +42,7 @@ export function createDatabase() {
   database.exec(`
       CREATE TABLE IF NOT EXISTS equipment(
         key INTEGER PRIMARY KEY,
+<<<<<<< HEAD
         NAME TEXT,
         DESCRIPTION TEXT
       ) STRICT`);
@@ -72,12 +77,35 @@ export function createDatabase() {
       key INTEGER PRIMARY KEY,
       NAME TEXT UNIQUE, 
       CONDITION TEXT
+=======
+        player_id INTEGER,
+        EQUIPMENTNAME TEXT,
+        DESCRIPTION TEXT,
+        FOREIGN KEY(player_id) REFERENCES players(key)
+      ) STRICT
+    `);
+  database.exec(`CREATE TABLE IF NOT EXISTS items(
+      key INTEGER PRIMARY KEY,
+      player_id INTEGER,
+      ITEMNAME TEXT,
+      DESCRIPTION TEXT,
+      AMOUNT INTEGER,
+      FOREIGN KEY(player_id) REFERENCES players(key)
+    ) STRICT`);
+  database.exec(`CREATE TABLE IF NOT EXISTS perks(
+      key INTEGER PRIMARY KEY,
+      player_id INTEGER NOT NULL,
+      PERKNAME TEXT,
+      DESCRIPTION TEXT,
+      FOREIGN KEY(player_id) REFERENCES players(key)
+>>>>>>> main
     ) STRICT`);
   database.exec(`CREATE TABLE IF NOT EXISTS modifiers(
       key INTEGER PRIMARY KEY,
       perk_id INTEGER NOT NULL,
       NAME TEXT,
       VALUE TEXT,
+<<<<<<< HEAD
       FOREIGN KEY(perk_id) REFERENCES perks(key)
     ) STRICT`);
 }
@@ -106,10 +134,39 @@ export function removePlayer(name: string) {
 export function updateSkills(stat: string, name: string, value: number) {
   let update = database.prepare(
     "UPDATE players SET " + stat + " = ? WHERE NAME = ?"
+=======
+      CONDITIONAL BOOLEAN,
+      FOREIGN KEY(perk_id) REFERENCES perks(key)
+    ) STRICT`)
+}
+
+export function addPlayer(name:string,id:string,guild:string,maxHP:number) {
+  if (getInfoPlayer(name) !=undefined){
+    return false
+  }
+  let insert = database.prepare(
+    "INSERT INTO players (NAME,AUTHORID,GUILD,HP_MAX,HP,STAMINA) VALUES (?,?,?,?,?,0)",
+  );
+  insert.run(name,id,guild,maxHP,maxHP);
+  return true
+}
+
+export function removePlayer(name:string){
+  let del = database.prepare("DELETE FROM players WHERE NAME = ?",
+  );
+  del.run(name);
+}
+
+
+export function updateSkills(stat:string, name:string, value:number) {
+  let update = database.prepare(
+    "UPDATE players SET " + stat + " = ? WHERE NAME = ?",
+>>>>>>> main
   );
   update.run(value, name);
 }
 
+<<<<<<< HEAD
 export function modifyHP(player: string, amount: number) {
   let get = database.prepare("SELECT HP,HP_MAX FROM players WHERE NAME = ?");
   let p = get.all(player)[0] as { HP: number; HP_MAX: number } | undefined;
@@ -153,6 +210,35 @@ export function getInfoPlayer(name: string) {
       p.NAME,
       p.HP,
       p.HP_MAX,
+=======
+export function modifyHP(player:string,amount:number){
+  let get = database.prepare("SELECT HP,HP_MAX FROM players WHERE NAME = ?");
+  let p = get.all(player)[0] as { HP: number; HP_MAX: number } | undefined;
+  if (p){
+      let hp = p.HP
+      let hp_max = p.HP_MAX
+      if (typeof(amount)=="number" && Number.isInteger(amount) && hp+amount>=0){
+          hp += amount
+          if (hp>hp_max){
+            hp=hp_max
+          }
+          let update = database.prepare(
+          "UPDATE players SET HP = ? WHERE NAME = ?",);
+          update.run(hp, player);
+          return true
+      }
+  }
+  return false
+}
+
+export function getInfoPlayer(name:string) {
+  let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
+  let p = get.all(name)[0] as {NAME:string,HP:number;COMBAT:number;SURVIVAL:number;MECHANIC:number;MEDECINE:number;DISCRETION:number;CHARISMA:number;PERCEPTION:number;ENDURANCE:number}|undefined;
+  if (p){
+  return new Player(
+    p.NAME,
+    p.HP,
+>>>>>>> main
       p.COMBAT,
       p.SURVIVAL,
       p.MECHANIC,
@@ -160,6 +246,7 @@ export function getInfoPlayer(name: string) {
       p.DISCRETION,
       p.CHARISMA,
       p.PERCEPTION,
+<<<<<<< HEAD
       p.ENDURANCE
     );
     var player_id = p.key;
@@ -263,3 +350,29 @@ export function getAllPerks() {
   let p = get.all() as { NAME: string }[];
   return p;
 }
+=======
+      p.ENDURANCE,
+  );
+}else {return undefined}
+}
+
+export function getPlayerFromAuthorId(id:string,guild:string) {
+  let get = database.prepare("SELECT name FROM players WHERE AUTHORID = ? AND GUILD=?");
+  let ret = [];
+  let p = get.all(id,guild) as {NAME:string;}[];
+  for (var obj of p){
+    ret.push(obj.NAME)
+  }
+  return ret
+}
+
+export function getStatus(guild:string) {
+  let get = database.prepare("SELECT name,HP,HP_MAX FROM players WHERE GUILD=?");
+  let p=get.all(guild) as {NAME:string;HP:number;HP_MAX:number;}[]
+  let ret = []
+  for (var player of p){
+    ret.push({"name":player.NAME,"HP":player.HP,"HP_MAX":player.HP_MAX})
+  }
+  return ret;
+}
+>>>>>>> main
