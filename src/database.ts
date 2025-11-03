@@ -1,7 +1,10 @@
 // SQLite (sync)
 import { DatabaseSync } from "node:sqlite";
 import { Player } from "./player.ts";
-const database = new DatabaseSync(new URL('../data.db', import.meta.url).pathname);
+import { Perk } from "./perk.ts";
+const database = new DatabaseSync(
+  new URL("../data.db", import.meta.url).pathname
+);
 
 export function createDatabase() {
   database.exec(`
@@ -76,62 +79,80 @@ export function createDatabase() {
       NAME TEXT,
       VALUE TEXT,
       FOREIGN KEY(perk_id) REFERENCES perks(key)
-    ) STRICT`)
+    ) STRICT`);
 }
 
-export function addPlayer(name:string,id:string,guild:string,maxHP:number) {
-  if (getInfoPlayer(name) !=undefined){
-    return false
+export function addPlayer(
+  name: string,
+  id: string,
+  guild: string,
+  maxHP: number
+) {
+  if (getInfoPlayer(name) != undefined) {
+    return false;
   }
   let insert = database.prepare(
-    "INSERT INTO players (NAME,AUTHORID,GUILD,HP_MAX,HP,STAMINA) VALUES (?,?,?,?,?,0)",
+    "INSERT INTO players (NAME,AUTHORID,GUILD,HP_MAX,HP,STAMINA) VALUES (?,?,?,?,?,0)"
   );
-  insert.run(name,id,guild,maxHP,maxHP);
-  return true
+  insert.run(name, id, guild, maxHP, maxHP);
+  return true;
 }
 
-export function removePlayer(name:string){
-  let del = database.prepare("DELETE FROM players WHERE NAME = ?",
-  );
+export function removePlayer(name: string) {
+  let del = database.prepare("DELETE FROM players WHERE NAME = ?");
   del.run(name);
 }
 
-
-export function updateSkills(stat:string, name:string, value:number) {
+export function updateSkills(stat: string, name: string, value: number) {
   let update = database.prepare(
-    "UPDATE players SET " + stat + " = ? WHERE NAME = ?",
+    "UPDATE players SET " + stat + " = ? WHERE NAME = ?"
   );
   update.run(value, name);
 }
 
-export function modifyHP(player:string,amount:number){
+export function modifyHP(player: string, amount: number) {
   let get = database.prepare("SELECT HP,HP_MAX FROM players WHERE NAME = ?");
   let p = get.all(player)[0] as { HP: number; HP_MAX: number } | undefined;
-  if (p){
-      let hp = p.HP
-      let hp_max = p.HP_MAX
-      if (typeof(amount)=="number" && Number.isInteger(amount) && hp+amount>=0){
-          hp += amount
-          if (hp>hp_max){
-            hp=hp_max
-          }
-          let update = database.prepare(
-          "UPDATE players SET HP = ? WHERE NAME = ?",);
-          update.run(hp, player);
-          return true
+  if (p) {
+    let hp = p.HP;
+    let hp_max = p.HP_MAX;
+    if (typeof amount == "number" && Number.isInteger(amount)) {
+      hp = Math.max(hp + amount, 0);
+      if (hp > hp_max) {
+        hp = hp_max;
       }
+      let update = database.prepare("UPDATE players SET HP = ? WHERE NAME = ?");
+      update.run(hp, player);
+      return true;
+    }
   }
-  return false
+  return false;
 }
 
-export function getInfoPlayer(name:string) {
+export function getInfoPlayer(name: string) {
   //TODO add perk and modifier fetch
   let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
-  let p = get.all(name)[0] as {NAME:string,HP:number;COMBAT:number;SURVIVAL:number;MECHANIC:number;MEDECINE:number;DISCRETION:number;CHARISMA:number;PERCEPTION:number;ENDURANCE:number}|undefined;
-  if (p){
-  return new Player(
-    p.NAME,
-    p.HP,
+  let p = get.all(name)[0] as
+    | {
+        key: number;
+        NAME: string;
+        HP: number;
+        HP_MAX: number;
+        COMBAT: number;
+        SURVIVAL: number;
+        MECHANIC: number;
+        MEDECINE: number;
+        DISCRETION: number;
+        CHARISMA: number;
+        PERCEPTION: number;
+        ENDURANCE: number;
+      }
+    | undefined;
+  if (p) {
+    let player = new Player(
+      p.NAME,
+      p.HP,
+      p.HP_MAX,
       p.COMBAT,
       p.SURVIVAL,
       p.MECHANIC,
@@ -139,62 +160,106 @@ export function getInfoPlayer(name:string) {
       p.DISCRETION,
       p.CHARISMA,
       p.PERCEPTION,
-      p.ENDURANCE,
-  );
-}else {return undefined}
-}
-
-export function getPlayerFromAuthorId(id:string,guild:string) {
-  let get = database.prepare("SELECT name FROM players WHERE AUTHORID = ? AND GUILD=?");
-  let ret = [];
-  let p = get.all(id,guild) as {NAME:string;}[];
-  for (var obj of p){
-    ret.push(obj.NAME)
+      p.ENDURANCE
+    );
+    var player_id = p.key;
+    get = database.prepare(
+      "SELECT p.key,p.name,p.condition FROM perks AS p INNER JOIN playerperks AS pp ON pp.perk_id = p.key WHERE pp.player_id = ?"
+    );
+    var p1 = get.all(player_id) as {
+      key: number;
+      NAME: string;
+      CONDITION: string;
+    }[];
+    if (p1) {
+      for (var val of p1) {
+        let perk = new Perk(val.NAME, val.CONDITION);
+        get = database.prepare(
+          "SELECT name,value FROM modifiers WHERE perk_id=?"
+        );
+        var p2 = get.all(val.key) as { NAME: string; VALUE: number }[];
+        for (var mod of p2) {
+          perk.addModifier(mod.NAME, mod.VALUE);
+        }
+        player.addPerk(perk);
+      }
+      return player;
+    }
   }
-  return ret
+  return undefined;
 }
 
-export function getStatus(guild:string) {
-  let get = database.prepare("SELECT name,HP,HP_MAX FROM players WHERE GUILD=?");
-  let p=get.all(guild) as {NAME:string;HP:number;HP_MAX:number;}[]
-  let ret = []
-  for (var player of p){
-    ret.push({"name":player.NAME,"HP":player.HP,"HP_MAX":player.HP_MAX})
+export function getPlayerFromAuthorId(id: string, guild: string): string[] {
+  let get = database.prepare(
+    "SELECT name FROM players WHERE AUTHORID = ? AND GUILD=?"
+  );
+  let ret = [];
+  let p = get.all(id, guild) as { NAME: string }[];
+  for (var obj of p) {
+    ret.push(obj.NAME);
   }
   return ret;
 }
-export function addPlayerPerk(perkName:string,playerName:string){
-  let get = database.prepare("SELECT key from perks WHERE name =?")
-  let p = get.all(perkName)[0] as {KEY:number}
-  let perk = p.KEY
-  get = database.prepare("SELECT key from players WHERE name=?")
-  p = get.all(playerName)[0] as {KEY:number}
-  let player = p.KEY
+
+export function getStatus(guild: string) {
+  let get = database.prepare(
+    "SELECT name,HP,HP_MAX FROM players WHERE GUILD=?"
+  );
+  let p = get.all(guild) as { NAME: string; HP: number; HP_MAX: number }[];
+  let ret = [];
+  for (var player of p) {
+    ret.push({ name: player.NAME, HP: player.HP, HP_MAX: player.HP_MAX });
+  }
+  return ret;
+}
+export function addPlayerPerk(perkName: string, playerName: string) {
+  //check that it's not already added
+  let get = database.prepare(
+    "SELECT p.name FROM perks AS p INNER JOIN playerperks AS pp ON pp.perk_id = p.key INNER JOIN players as pl ON pp.player_id = pl.key WHERE pl.NAME = ?"
+  );
+  let p = get.all(playerName).map((row) => row.NAME);
+  if (p.includes(perkName)) {
+    return;
+  }
+  get = database.prepare("SELECT key from perks WHERE name =?");
+  let p1 = get.all(perkName)[0] as { key: number };
+  let perk = p1.key;
+  get = database.prepare("SELECT key from players WHERE name=?");
+  p1 = get.all(playerName)[0] as { key: number };
+  let player = p1.key;
   let insert = database.prepare(
-    "INSERT INTO playerperks (player_id,perk_id) values (?,?)",
+    "INSERT INTO playerperks (player_id,perk_id) values (?,?)"
   );
-  insert.run(perk,player);
+  insert.run(player, perk);
 }
 
-export function addPerk(perkName:string,condition:string){
-    let insert = database.prepare(
-    "INSERT INTO perks (name,condition) values (?,?)",
-  );
-  insert.run(perkName,condition);
+export function getPerk(perkName: string): Perk | undefined {
+  let get = database.prepare("SELECT name,condition from perks WHERE name =?");
+  let p = get.all(perkName)[0] as { NAME: string; CONDITION: string };
+  if (p) {
+    return new Perk(p.NAME, p.CONDITION);
+  }
+  return undefined;
 }
 
-export function addModifier(perkName:string,stat:string,value:number){
-  let get = database.prepare("SELECT key from perks WHERE name =?")
-  let p = get.all(perkName)[0] as {KEY:number}
-  let perk = p.KEY
+export function addPerk(perkName: string, condition: string) {
   let insert = database.prepare(
-    "INSERT INTO modifiers (perk_id,name,value) values (?,?;?)",
+    "INSERT INTO perks (name,condition) values (?,?)"
   );
-  insert.run(perk,stat,value);
-
+  insert.run(perkName, condition);
 }
-export function getAllPerks(){
-  let get = database.prepare("SELECT NAME from perks ORDER BY name")
-  let p = get.all() as {NAME:string;}[]
+
+export function addModifier(perkName: string, stat: string, value: number) {
+  let get = database.prepare("SELECT key from perks WHERE name =?");
+  let p = get.all(perkName)[0] as { key: number };
+  let perk = p.key;
+  let insert = database.prepare(
+    "INSERT INTO modifiers (perk_id,name,value) values (?,?,?)"
+  );
+  insert.run(perk, stat, value);
+}
+export function getAllPerks() {
+  let get = database.prepare("SELECT NAME from perks ORDER BY name");
+  let p = get.all() as { NAME: string }[];
   return p;
 }

@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "A Discord bot built with Node.js 22 and discord.js",
   "dependencies": {
+    "@discordjs/builders": "^1.13.0",
     "@discordjs/voice": "^0.19.0",
     "@snazzah/davey": "^0.1.7",
     "better-sqlite3": "^11.7.0",

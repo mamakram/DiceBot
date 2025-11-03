@@ -14,19 +14,33 @@ import {
   entersState,
 } from "@discordjs/voice";
 
+import { Message, ChatInputCommandInteraction } from "discord.js";
+
 const soundsFolder = "sounds/";
 import { spawn } from "child_process";
+type CommandType = Message | ChatInputCommandInteraction;
 
-export async function playMusic(msg, folder) {
-  if (!msg.member.voice.channel) {
-    return msg.reply("Faut etre dans un channel vocal pour ça !");
+export async function playMusic(context: CommandType, folder: string) {
+  // Get member and guild based on context type
+  const member =
+    context instanceof Message
+      ? context.member
+      : context.guild?.members.cache.get(context.user.id);
+  const guild = context.guild;
+
+  if (
+    !member ||
+    !member.voice.channel ||
+    !member.voice.channelId ||
+    !guild?.voiceAdapterCreator
+  ) {
+    return context.reply("Faut etre dans un channel vocal pour ça !");
   }
   const connection = joinVoiceChannel({
-    channelId: msg.member.voice.channelId,
-    guildId: msg.guild.id,
-    adapterCreator: msg.guild.voiceAdapterCreator,
+    channelId: member.voice.channelId,
+    guildId: guild.id,
+    adapterCreator: guild.voiceAdapterCreator,
   });
-
   try {
     await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
     console.log("[VoiceConnection] Ready");
@@ -38,7 +52,7 @@ export async function playMusic(msg, folder) {
     async (oldState, newState) => {
       console.log("[VoiceConnection] Disconnected, destroying connection.");
       connection.destroy(); // safely destroy connectionthis.connection.on('stateChange', (oldState, newState) => {
-    },
+    }
   );
 
   let file = chooseRandomFromFolder(path.join(soundsFolder + folder));
@@ -78,14 +92,16 @@ export async function playMusic(msg, folder) {
   });
 }
 
-export async function disconnect(msg) {
-  const connection = getVoiceConnection(msg.guild.id);
-  if (connection) {
-    connection.destroy();
+export async function disconnect(context: CommandType) {
+  if (context.guild) {
+    let connection = getVoiceConnection(context.guild.id);
+    if (connection) {
+      connection.destroy();
+    }
   }
 }
 
-function chooseRandomFromFolder(folder) {
+function chooseRandomFromFolder(folder: string) {
   let files = fs
     .readdirSync(folder, { withFileTypes: true })
     .filter((item) => !item.isDirectory())
