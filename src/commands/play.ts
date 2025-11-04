@@ -20,7 +20,7 @@ export const data = new SlashCommandBuilder()
         { name: "Fight", value: "fight" },
         { name: "Brook", value: "brook" },
         { name: "Smash", value: "smash" },
-        { name: "Ultra", value: "ultrainstinct" },
+        { name: "Ultra Instinct", value: "ultra" },
         { name: "Ascenseur", value: "elevator" }
       )
   );

@@ -11,11 +11,8 @@ import { playerCreationContainer } from "../menus.js";
  * @param {*} msg discord message
  */
 export const data = new SlashCommandBuilder()
-  .setName("delete")
-  .setDescription("Delete a player character")
-  .addUserOption((option) =>
-    option.setName("user").setDescription("The user").setRequired(true)
-  );
+  .setName("nouveau")
+  .setDescription("Créer un nouveau personnage");
 
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction

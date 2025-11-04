@@ -6,7 +6,7 @@ import {
 
 //TODO this
 export const data = new SlashCommandBuilder()
-  .setName("addperk")
+  .setName("ajouterperk")
   .setDescription("Add a perk to a player")
   .addUserOption((option) =>
     option.setName("user").setDescription("The user").setRequired(true)

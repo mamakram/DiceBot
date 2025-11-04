@@ -104,14 +104,14 @@ client.on("messageCreate", async (msg) => {
   const commandMap = {
     "?r": "roll",
     "?info": "info",
-    "?nouveau": "create",
-    "?ajouterPV": "addhp",
-    "?enleverPV": "removehp",
-    "?supprimer": "delete",
-    "?statut": "status",
-    "?ajouterPerk": "addperk",
+    "?nouveau": "nouveau",
+    "?ajouterPV": "ajouterpv",
+    "?enleverPV": "enleverpv",
+    "?supprimer": "supprimer",
+    "?statut": "statut",
+    "?ajouterPerk": "ajouterperk",
     "?help": "help",
-    "?leave": "leave",
+    "?quitter": "quitter",
     "?play": "play",
   };
 
