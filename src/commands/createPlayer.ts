@@ -5,7 +5,7 @@ import {
   MessageFlags,
 } from "discord.js";
 
-import { playerCreationContainer } from "../menus.ts";
+import { playerCreationContainer } from "../menus.js";
 /**
  * create new player
  * @param {*} msg discord message
