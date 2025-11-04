@@ -3,7 +3,7 @@ import {
   Message,
   ChatInputCommandInteraction,
 } from "discord.js";
-
+// TODO: this
 export const data = new SlashCommandBuilder()
   .setName("removehp")
   .setDescription("Remove HP from a player")
@@ -20,7 +20,6 @@ export const data = new SlashCommandBuilder()
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
-  // TODO: Implement remove HP logic
   await interaction.reply("Remove HP command");
 }
 export async function executeMessage(command: Message) {}

@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+//TODO this
 export const data = new SlashCommandBuilder()
   .setName("addperk")
   .setDescription("Add a perk to a player")
@@ -14,7 +15,6 @@ export const data = new SlashCommandBuilder()
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
-  // TODO: Implement add perk logic
   await interaction.reply("Add perk command");
 }
 

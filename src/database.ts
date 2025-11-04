@@ -130,7 +130,6 @@ export function modifyHP(player: string, amount: number) {
 }
 
 export function getInfoPlayer(name: string) {
-  //TODO add perk and modifier fetch
   let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
   let p = get.all(name)[0] as
     | {

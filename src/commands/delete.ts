@@ -3,18 +3,20 @@ import {
   Message,
   SlashCommandBuilder,
 } from "discord.js";
-
+// TODO: this
 export const data = new SlashCommandBuilder()
-  .setName("delete")
-  .setDescription("Delete a player character")
+  .setName("supprimer")
+  .setDescription("Supprime le personnage")
   .addUserOption((option) =>
-    option.setName("user").setDescription("The user").setRequired(true)
+    option
+      .setName("utilisateur")
+      .setDescription("L'utilisateur")
+      .setRequired(true)
   );
 
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
-  // TODO: Implement delete logic
   await interaction.reply("Delete command");
 }
 

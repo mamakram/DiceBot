@@ -6,11 +6,7 @@ const token = process.env["DISCORD_BOT_TOKEN"];
 import {
   Client,
   GatewayIntentBits,
-  ActionRowBuilder,
   ModalBuilder,
-  StringSelectMenuBuilder,
-  EmbedBuilder,
-  StringSelectMenuOptionBuilder,
   MessageFlags,
   Collection,
   REST,
@@ -18,7 +14,6 @@ import {
 } from "discord.js";
 import * as db from "./database.ts";
 import {
-  playerCreationContainer,
   perkSelectionContainer,
   perkCreationContainer,
   modifierComponent,
@@ -52,12 +47,9 @@ const commandFiles = fs
   .filter((file) => file.endsWith(".ts") || file.endsWith(".js"));
 
 const commands = [];
-
-//TODO add perks and calculate true skill values
 //TODO add inventory and equipment
 //TODO maybe add rivalries
 //TODO calculate skill throws
-//TODO add slash commands support / major refactor
 //TODO add comprehensive way to add ennemies/NPC
 //TODO add profile pic
 
@@ -137,31 +129,6 @@ client.on("messageCreate", async (msg) => {
     }
   }
 });
-/**
- * show a selection for players based on discord id
- * @param {*} msg
- * @param {*} call String name of function that called
- * @param {*} params params of the function
- */
-async function selectPlayer(msg, call, params) {
-  let players = db.getPlayerFromAuthorId(msg.author.id, msg.guild.id);
-  let options = [];
-  for (var p of players) {
-    options.push(new StringSelectMenuOptionBuilder().setLabel(p).setValue(p));
-  }
-  let characterSelect = new StringSelectMenuBuilder()
-    .setCustomId(
-      "charSelect/" + msg.author.id + "/" + call + "/" + params.toString()
-    )
-    .setPlaceholder("personnage")
-    .addOptions(options);
-  let row = new ActionRowBuilder().addComponents(characterSelect);
-  await msg.channel.send({
-    content: "Sélectionnez le personnage",
-    components: [row],
-  });
-  return true;
-}
 
 /**
  * Launch function after a MemberSelect Action to select the user (see SelectPlayer)
@@ -275,22 +242,6 @@ async function deletePlayer(msg) {
   }
 }
 
-/**
- * Send Status of all players
- * @param {*} msg discord message
- */
-async function status(msg) {
-  let state = db.getStatus(msg.guild.id);
-  let embed = new EmbedBuilder().setTitle("Statut");
-  for (var s of state) {
-    embed.addFields({
-      name: s.name,
-      value: s.HP == 0 ? ":skull: " : "" + s.HP + "/" + s.HP_MAX + " PV",
-    });
-  }
-  await msg.channel.send({ embeds: [embed] });
-}
-
 async function addPerk(msg) {
   let tmp = msg.content.split(" ");
   if (tmp.length != 2) {
@@ -314,16 +265,6 @@ async function addPerk(msg) {
   } else {
     await msg.channel.send("Ce joueur n'existe pas");
   }
-}
-/**
- * create new player
- * @param {*} msg discord message
- */
-async function createPlayer(msg) {
-  await msg.channel.send({
-    components: [playerCreationContainer(msg.author.id)],
-    flags: MessageFlags.IsComponentsV2,
-  });
 }
 
 /**

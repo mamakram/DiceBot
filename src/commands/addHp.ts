@@ -24,7 +24,7 @@ export const data = new SlashCommandBuilder()
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
-  // TODO: Implement add HP logic
+  // TODO: this
   await interaction.reply("Add HP command");
 }
 
