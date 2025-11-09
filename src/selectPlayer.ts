@@ -6,6 +6,7 @@ import {
   ChatInputCommandInteraction,
 } from "discord.js";
 import * as db from "./database.ts";
+import { selectCache } from "./SelectCache.ts";
 /**
  * show a selection for players based on discord id
  * @param {*} interaction
@@ -26,12 +27,12 @@ export async function selectPlayer(
   for (var p of players) {
     options.push(new StringSelectMenuOptionBuilder().setLabel(p).setValue(p));
   }
+  var customId = "charSelect/" + authorId + "/" + command;
   let characterSelect = new StringSelectMenuBuilder()
-    .setCustomId(
-      "charSelect/" + authorId + "/" + command + "/" + params.toString()
-    )
+    .setCustomId(customId)
     .setPlaceholder("personnage")
     .addOptions(options);
+  selectCache.push(customId, JSON.stringify(params));
   let row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
     characterSelect
   );

@@ -85,7 +85,7 @@ export function statOptions(): StringSelectMenuOptionBuilder[] {
 
 export function perkOptions(): StringSelectMenuOptionBuilder[] {
   let options = [];
-  for (var perk of db.getAllPerks()) {
+  for (var perk of db.getAllPerkNames()) {
     options.push(
       new StringSelectMenuOptionBuilder()
         .setLabel(perk.NAME)

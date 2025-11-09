@@ -11,17 +11,18 @@ import {
   Collection,
   REST,
   Routes,
+  ButtonStyle,
 } from "discord.js";
 import * as db from "./database.ts";
-import { perkSubmit } from "./commands/addPerk.ts";
 import {
   perkSelectionContainer,
   perkCreationContainer,
   modifierComponent,
   stringInputModal,
 } from "./menus.js";
-import { selectCache, SelectCache } from "./SelectCache.ts";
-import { STATS } from "./utils.ts";
+import { selectCache } from "./SelectCache.ts";
+import { playerSubmit } from "./commands/createPlayer.ts";
+import { perkSubmit } from "./commands/addPerk.ts";
 // Node core modules
 import fs from "fs";
 import path from "path";
@@ -51,7 +52,6 @@ const commands = [];
 //TODO maybe add rivalries
 //TODO calculate skill throws
 //TODO add comprehensive way to add ennemies/NPC
-//TODO add profile pic
 
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
@@ -147,98 +147,9 @@ function applyFunction(call, params) {
     case "db.getInfoPlayer":
       var p = db.getInfoPlayer(params[0]);
       return { embeds: [p.toEmbed()] };
-  }
-}
-
-/**return Info for a given player based on discord id
- * If multiple players exist, shows a selection menu to choose
- * **/
-async function getInfo(msg) {
-  let tmp = msg.content.split(" ");
-  if (tmp.length != 2) {
-    await msg.channel.send("?info @joueur");
-    return;
-  }
-  let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
-  let player = db.getPlayerFromAuthorId(id, msg.guild.id);
-  if (player.length == 1) {
-    let p = db.getInfoPlayer(player[0]);
-    await msg.channel.send({ embeds: [p.toEmbed()] });
-  } else if (player.length > 1) {
-    selectPlayer(msg, "db.getInfoPlayer", []);
-  } else {
-    await msg.channel.send("Ce joueur n'existe pas");
-  }
-}
-
-/**
- * add HP
- * @param {*} msg
- */
-async function addHP(msg) {
-  let tmp = msg.content.split(" ");
-  if (tmp.length != 3) {
-    await msg.channel.send("?ajouterPV @joueur quantité");
-    return;
-  }
-  let amount = parseInt(tmp[2]) ?? 0;
-  let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
-  let player = db.getPlayerFromAuthorId(id, msg.guild.id);
-  if (player.length == 1) {
-    db.modifyHP(player[0], amount);
-    await msg.channel.send(
-      player[0] + " a " + db.getInfoPlayer(player[0]).getHp() + " PV"
-    );
-  } else if (player.length > 1) {
-    selectPlayer(msg, "db.modifyHP", [amount]);
-  } else {
-    await msg.channel.send("Ce joueur n'existe pas");
-  }
-}
-
-async function removeHP(msg) {
-  let tmp = msg.content.split(" ");
-  if (tmp.length != 3) {
-    await msg.channel.send("?enleverPV @joueur quantité");
-    return;
-  }
-  let amount = parseInt(tmp[2]) ?? 0;
-  let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
-  let player = db.getPlayerFromAuthorId(id, msg.guild.id);
-  if (player.length == 1) {
-    db.modifyHP(player[0], -amount);
-    await msg.channel.send(
-      player[0] + " a " + db.getInfoPlayer(player[0]).getHp() + " PV"
-    );
-  } else if (player.length > 1) {
-    selectPlayer(msg, "db.modifyHP", [-amount]);
-  } else {
-    await msg.channel.send("Ce joueur n'existe pas");
-  }
-}
-/**
- * Delete a player associated to discord id of sender
- * @param {*} msg discord message
- */
-async function deletePlayer(msg) {
-  let tmp = msg.content.split(" ");
-  if (tmp.length != 2) {
-    await msg.channel.send("?supprimer @joueur");
-    return;
-  }
-  let id = msg.content
-    .split(" ")[1]
-    .replace("@", "")
-    .replace("<", "")
-    .replace(">", "");
-  let player = db.getPlayerFromAuthorId(id, msg.guild.id);
-  if (player.length == 1) {
-    db.removePlayer(player[0]);
-    await msg.channel.send(player[0] + " a été supprimé !");
-  } else if (player.length > 1) {
-    selectPlayer(msg, "db.removePlayer", []);
-  } else {
-    await msg.channel.send("Ce joueur n'existe pas");
+    case "db.addProfilePic":
+      db.addProfilePic(params[0], params[1]);
+      return "Image ajoutée";
   }
 }
 
@@ -311,44 +222,6 @@ async function ButtonInteraction(interaction) {
 }
 
 /**
- * Create new player based on submission from @see playerCreationContainer
- * @param {*} interaction interaction from validate button
- */
-function playerSubmit(interaction) {
-  var container = interaction.message.components[0];
-  //user or maxHp or name not entered
-  if (
-    !selectCache.exists(container.components[1].components[0].customId) ||
-    !selectCache.exists(container.components[2].components[0].customId) ||
-    container.components[0].accessory.data.type == "1"
-  ) {
-    return false;
-  }
-  //stat value not entered
-  for (let i = 0; i < STATS.length; i++) {
-    if (
-      !selectCache.exists(container.components[5 + i].components[0].customId)
-    ) {
-      return false;
-    }
-  }
-  var playerName = container.components[0].accessory.data.label;
-  var authorId = selectCache.pop(
-    container.components[1].components[0].customId
-  );
-  var maxHP = selectCache.pop(container.components[2].components[0].customId);
-  db.addPlayer(playerName, authorId, interaction.guild.id, maxHP);
-  for (let i = 0; i < STATS.length; i++) {
-    var val = selectCache.pop(
-      container.components[5 + i].components[0].customId
-    );
-    var name = container.components[5 + i].components[0].customId.split("/")[1];
-    db.updateSkills(name, playerName, val);
-  }
-  return true;
-}
-
-/**
  * Handle String input modals that ask a string input after button press by assigning value to button and disabling it
  * Used in various container @see perkCreationContainer @see playerCreationContainer
  * @param {*} interaction
@@ -365,17 +238,17 @@ async function stringInput(interaction) {
         container.components[0].accessory.data.label = "Nom déjà utilisé";
       } else {
         container.components[0].accessory.data.label = value;
-        container.components[0].accessory.data.style = 2;
+        container.components[0].accessory.data.style = ButtonStyle.Secondary;
         container.components[0].accessory.data.disabled = true;
       }
       break;
     case "perkName":
       if (db.getPerk(value)) {
-        //name alre ady used
+        //name already used
         container.components[0].accessory.data.label = "Nom déjà utilisé";
       } else {
         container.components[0].accessory.data.label = value;
-        container.components[0].accessory.data.style = 2;
+        container.components[0].accessory.data.style = ButtonStyle.Secondary;
         container.components[0].accessory.data.disabled = true;
       }
       break;
@@ -404,20 +277,6 @@ async function ModalInteraction(interaction) {
       stringInput(interaction);
       interaction.deferUpdate();
       break;
-    case "perkInputModal":
-      var name =
-        interaction.message.components[0].components[0].customId.split("/")[2];
-      for (var [customId, f] of interaction.fields.fields.entries()) {
-        var value = parseInt(f.values[0]);
-        let info = customId.split("/");
-        let name = info[1];
-        let stat = info[0];
-        //addPerk(stat, name, value);
-      }
-
-      await interaction.reply({ embeds: [getInfoPlayer(name).toEmbed()] });
-      await interaction.message.delete();
-      break;
   }
 }
 async function stringSelectInteraction(interaction) {
@@ -435,11 +294,9 @@ async function stringSelectInteraction(interaction) {
           flags: MessageFlags.IsComponentsV2,
         });
       } else {
+        var params = JSON.parse(selectCache.pop(interaction.customId));
         await interaction.reply(
-          applyFunction(
-            info[2],
-            [selected].concat(JSON.parse("[" + info[3] + "]"))
-          )
+          applyFunction(info[2], [selected].concat(params))
         );
       }
       await interaction.message.delete();

@@ -8,7 +8,10 @@ import {
 
 import * as db from "../database.ts";
 import { selectPlayer } from "../selectPlayer.ts";
-
+/**
+ * add HP to given player
+ * @param {*} msg
+ */
 export const data = new SlashCommandBuilder()
   .setName("ajouterpv")
   .setDescription("Add HP to a player")

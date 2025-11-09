@@ -1,5 +1,6 @@
-import { Modifier } from "./modifier.ts";
-import { STATS_NICENAME } from "./utils.ts";
+import { Modifier } from "./Modifier.ts";
+import { STATS_NICENAME } from "../utils.ts";
+
 export class Perk {
   _name: string;
   _condition: string;

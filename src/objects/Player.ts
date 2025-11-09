@@ -1,6 +1,6 @@
 import { EmbedBuilder } from "discord.js";
-import { Perk } from "./perk.ts";
-import { DEFAULT_PROFILE_PICTURE } from "./utils.ts";
+import { Perk } from "./Perk.ts";
+import { DEFAULT_PROFILE_PICTURE } from "../utils.ts";
 
 export class Player {
   _name: string;
@@ -14,6 +14,7 @@ export class Player {
     name: string,
     hp: number = 0,
     maxHp: number = 0,
+    profilePicture: string = DEFAULT_PROFILE_PICTURE,
     combat: number = 0,
     survival: number = 0,
     mechanic: number = 0,
@@ -21,8 +22,7 @@ export class Player {
     discretion: number = 0,
     charisma: number = 0,
     perception: number = 0,
-    endurance: number = 0,
-    profilePicture = DEFAULT_PROFILE_PICTURE
+    endurance: number = 0
   ) {
     this._name = name;
     this._hp = hp;
@@ -36,7 +36,7 @@ export class Player {
     this._skills.set("CHARISMA", charisma);
     this._skills.set("PERCEPTION", perception);
     this._skills.set("ENDURANCE", endurance);
-    this._profilePicture = profilePicture;
+    this._profilePicture = profilePicture ?? DEFAULT_PROFILE_PICTURE;
   }
   setStamina(stamina: number) {
     this._stamina = stamina;

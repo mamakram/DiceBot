@@ -1,7 +1,7 @@
 // SQLite (sync)
 import { DatabaseSync } from "node:sqlite";
-import { Player } from "./player.ts";
-import { Perk } from "./perk.ts";
+import { Player } from "./objects/Player.ts";
+import { Perk } from "./objects/Perk.ts";
 const database = new DatabaseSync(
   new URL("../data.db", import.meta.url).pathname
 );
@@ -15,6 +15,7 @@ export function createDatabase() {
         GUILD TEXT,
         HP INTEGER DEFAULT 0,
         HP_MAX INTEGER DEFAULT 0,
+        PROFILE_PIC TEXT,
         STAMINA INTEGER DEFAULT 0,
         COMBAT INTEGER,
         SURVIVAL INTEGER,
@@ -137,6 +138,7 @@ export function getInfoPlayer(name: string) {
         NAME: string;
         HP: number;
         HP_MAX: number;
+        PROFILE_PIC: string;
         COMBAT: number;
         SURVIVAL: number;
         MECHANIC: number;
@@ -152,6 +154,7 @@ export function getInfoPlayer(name: string) {
       p.NAME,
       p.HP,
       p.HP_MAX,
+      p.PROFILE_PIC,
       p.COMBAT,
       p.SURVIVAL,
       p.MECHANIC,
@@ -257,7 +260,15 @@ export function addModifier(perkName: string, stat: string, value: number) {
   );
   insert.run(perk, stat, value);
 }
-export function getAllPerks() {
+
+export function addProfilePic(playerName: string, image: string) {
+  let update = database.prepare(
+    "UPDATE players SET PROFILE_PIC = ? WHERE NAME = ?"
+  );
+  update.run(image, playerName);
+}
+
+export function getAllPerkNames() {
   let get = database.prepare("SELECT NAME from perks ORDER BY name");
   let p = get.all() as { NAME: string }[];
   return p;

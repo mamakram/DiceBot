@@ -5,7 +5,12 @@ import {
   GuildMember,
 } from "discord.js";
 import * as db from "../database.ts";
-import { selectPlayer } from "../selectPlayer";
+import { selectPlayer } from "../selectPlayer.ts";
+
+/**
+ * remove HP from given player
+ * @param {*} msg
+ */
 export const data = new SlashCommandBuilder()
   .setName("removehp")
   .setDescription("Enlever des PV a un joueur")

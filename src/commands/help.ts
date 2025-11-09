@@ -29,7 +29,9 @@ function helpEmbed() {
   let embed = new EmbedBuilder()
     .setColor(0x0099ff)
     .setTitle("Dicebot")
-    .setDescription("Bot de lancer de dés et fonctionnalités JDR")
+    .setDescription(
+      "Bot de lancer de dés et fonctionnalités JDR, commandes en ? ou en /"
+    )
     .addFields(
       { name: "Lancer de dés", value: "" },
       { name: "?r _d_", value: "jette un dé. Exemple: ?r 2d6" },
@@ -50,7 +52,11 @@ function helpEmbed() {
       { name: "\u200B", value: "\u200B" }
     )
     .addFields(
-      { name: "Fiches", value: "" },
+      {
+        name: "Fiches",
+        value:
+          "Les commandes ouvrent un menu de sélection si un joueur a plusieurs personnages",
+      },
       {
         name: "?nouveau",
         value: "Créer un nouveau personnage",
@@ -59,6 +65,11 @@ function helpEmbed() {
       {
         name: "?supprimer @joueur",
         value: "Supprime le personnage",
+        inline: true,
+      },
+      {
+        name: "/ajouterphoto @joueur lien",
+        value: "Ajouter une photo à un personnage",
         inline: true,
       },
       {
