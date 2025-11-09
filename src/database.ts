@@ -28,15 +28,6 @@ export function createDatabase() {
       ) STRICT
     `);
   database.exec(`
-      CREATE TABLE IF NOT EXISTS skills(
-        key INTEGER PRIMARY KEY,
-        player_id INTEGER,
-        SKILLNAME TEXT,
-        LEVEL INTEGER,
-        FOREIGN KEY(player_id) REFERENCES players(key)
-      ) STRICT
-    `);
-  database.exec(`
       CREATE TABLE IF NOT EXISTS equipment(
         key INTEGER PRIMARY KEY,
         NAME TEXT,
@@ -47,27 +38,6 @@ export function createDatabase() {
       NAME TEXT,
       DESCRIPTION TEXT,
       AMOUNT INTEGER
-    ) STRICT`);
-  database.exec(`CREATE TABLE IF NOT EXISTS playerperks(
-    key INTEGER PRIMARY KEY,
-    player_id INTEGER,
-    perk_id INTEGER,
-    FOREIGN KEY(player_id) REFERENCES players(key),
-    FOREIGN KEY(perk_id) REFERENCES perks(key)
-    ) STRICT`);
-  database.exec(`CREATE TABLE IF NOT EXISTS playerequipment(
-    key INTEGER PRIMARY KEY,
-    player_id INTEGER,  
-    equipment_id INTEGER,
-    FOREIGN KEY(player_id) REFERENCES players(key),
-    FOREIGN KEY(equipment_id) REFERENCES equipment(key)
-    ) STRICT`);
-  database.exec(`CREATE TABLE IF NOT EXISTS playeritems(
-    key INTEGER PRIMARY KEY,
-    player_id INTEGER,
-    item_id INTEGER,
-    FOREIGN KEY(player_id) REFERENCES players(key),
-    FOREIGN KEY(item_id) REFERENCES items(key)
     ) STRICT`);
   database.exec(`CREATE TABLE IF NOT EXISTS perks(
       key INTEGER PRIMARY KEY,
@@ -81,8 +51,39 @@ export function createDatabase() {
       VALUE TEXT,
       FOREIGN KEY(perk_id) REFERENCES perks(key)
     ) STRICT`);
+
+  //relational tables
+  database.exec(`CREATE TABLE IF NOT EXISTS playerperks(
+      key INTEGER PRIMARY KEY,
+      player_id INTEGER,
+      perk_id INTEGER,
+      FOREIGN KEY(player_id) REFERENCES players(key),
+      FOREIGN KEY(perk_id) REFERENCES perks(key)
+      ) STRICT`);
+  database.exec(`CREATE TABLE IF NOT EXISTS playerequipment(
+      key INTEGER PRIMARY KEY,
+      player_id INTEGER,  
+      equipment_id INTEGER,
+      FOREIGN KEY(player_id) REFERENCES players(key),
+      FOREIGN KEY(equipment_id) REFERENCES equipment(key)
+      ) STRICT`);
+  database.exec(`CREATE TABLE IF NOT EXISTS playeritems(
+      key INTEGER PRIMARY KEY,
+      player_id INTEGER,
+      item_id INTEGER,
+      FOREIGN KEY(player_id) REFERENCES players(key),
+      FOREIGN KEY(item_id) REFERENCES items(key)
+      ) STRICT`);
 }
 
+/**
+ * Add new player to table
+ * @param name
+ * @param id
+ * @param guild
+ * @param maxHP
+ * @returns
+ */
 export function addPlayer(
   name: string,
   id: string,
@@ -99,11 +100,21 @@ export function addPlayer(
   return true;
 }
 
+/**
+ * Delete player in table
+ * @param name
+ */
 export function removePlayer(name: string) {
   let del = database.prepare("DELETE FROM players WHERE NAME = ?");
   del.run(name);
 }
 
+/**
+ * Update skill in table to given value
+ * @param stat
+ * @param name
+ * @param value
+ */
 export function updateSkills(stat: string, name: string, value: number) {
   let update = database.prepare(
     "UPDATE players SET " + stat + " = ? WHERE NAME = ?"
@@ -111,6 +122,12 @@ export function updateSkills(stat: string, name: string, value: number) {
   update.run(value, name);
 }
 
+/**
+ * Modify player hp by amount
+ * @param player
+ * @param amount
+ * @returns
+ */
 export function modifyHP(player: string, amount: number) {
   let get = database.prepare("SELECT HP,HP_MAX FROM players WHERE NAME = ?");
   let p = get.all(player)[0] as { HP: number; HP_MAX: number } | undefined;
@@ -130,6 +147,11 @@ export function modifyHP(player: string, amount: number) {
   return false;
 }
 
+/**
+ * Fetch player info based on character name
+ * @param name
+ * @returns Player object
+ */
 export function getInfoPlayer(name: string) {
   let get = database.prepare("SELECT * FROM players WHERE NAME = ?");
   let p = get.all(name)[0] as
@@ -191,6 +213,12 @@ export function getInfoPlayer(name: string) {
   return undefined;
 }
 
+/**
+ * Get all player names associated to a discord id
+ * @param id
+ * @param guild
+ * @returns
+ */
 export function getPlayerFromAuthorId(id: string, guild: string): string[] {
   let get = database.prepare(
     "SELECT name FROM players WHERE AUTHORID = ? AND GUILD=?"
@@ -203,6 +231,11 @@ export function getPlayerFromAuthorId(id: string, guild: string): string[] {
   return ret;
 }
 
+/**
+ * Get status of all player (ie HP) in specific guild
+ * @param guild
+ * @returns
+ */
 export function getStatus(guild: string) {
   let get = database.prepare(
     "SELECT name,HP,HP_MAX FROM players WHERE GUILD=?"
@@ -214,6 +247,13 @@ export function getStatus(guild: string) {
   }
   return ret;
 }
+
+/**
+ * Associate existing perk to existing player in relational table
+ * @param perkName
+ * @param playerName
+ * @returns
+ */
 export function addPlayerPerk(perkName: string, playerName: string) {
   //check that it's not already added
   let get = database.prepare(
@@ -235,6 +275,11 @@ export function addPlayerPerk(perkName: string, playerName: string) {
   insert.run(player, perk);
 }
 
+/**
+ * Get Perk from perk name
+ * @param perkName
+ * @returns Perk object or undefined
+ */
 export function getPerk(perkName: string): Perk | undefined {
   let get = database.prepare("SELECT name,condition from perks WHERE name =?");
   let p = get.all(perkName)[0] as { NAME: string; CONDITION: string };
@@ -244,6 +289,11 @@ export function getPerk(perkName: string): Perk | undefined {
   return undefined;
 }
 
+/**
+ * Add new perk
+ * @param perkName
+ * @param condition
+ */
 export function addPerk(perkName: string, condition: string) {
   let insert = database.prepare(
     "INSERT INTO perks (name,condition) values (?,?)"
@@ -251,6 +301,12 @@ export function addPerk(perkName: string, condition: string) {
   insert.run(perkName, condition);
 }
 
+/**
+ * Add a new modifier associated to perk
+ * @param perkName
+ * @param stat modified stat
+ * @param value modifier
+ */
 export function addModifier(perkName: string, stat: string, value: number) {
   let get = database.prepare("SELECT key from perks WHERE name =?");
   let p = get.all(perkName)[0] as { key: number };
@@ -261,6 +317,11 @@ export function addModifier(perkName: string, stat: string, value: number) {
   insert.run(perk, stat, value);
 }
 
+/**
+ * Add profile picture to user entry
+ * @param playerName
+ * @param image
+ */
 export function addProfilePic(playerName: string, image: string) {
   let update = database.prepare(
     "UPDATE players SET PROFILE_PIC = ? WHERE NAME = ?"
@@ -268,6 +329,10 @@ export function addProfilePic(playerName: string, image: string) {
   update.run(image, playerName);
 }
 
+/**
+ * get all Perk names from db
+ * @returns perk names as list
+ */
 export function getAllPerkNames() {
   let get = database.prepare("SELECT NAME from perks ORDER BY name");
   let p = get.all() as { NAME: string }[];
