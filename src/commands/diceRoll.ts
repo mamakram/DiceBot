@@ -6,8 +6,8 @@ import {
   TextChannel,
 } from "discord.js";
 
-const start = "```ansi\n" + "\u001b[0;37m";
-const end = "```";
+const start = "```ansi\n" + "\u001b[0;37m ";
+const end = " ```";
 const MAX_MESSAGE_LENGTH = 850;
 
 /**

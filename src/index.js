@@ -13,13 +13,14 @@ import {
   Routes,
 } from "discord.js";
 import * as db from "./database.ts";
+import { perkSubmit } from "./commands/addPerk.ts";
 import {
   perkSelectionContainer,
   perkCreationContainer,
   modifierComponent,
   stringInputModal,
 } from "./menus.js";
-import { SelectCache } from "./SelectCache.ts";
+import { selectCache, SelectCache } from "./SelectCache.ts";
 import { STATS } from "./utils.ts";
 // Node core modules
 import fs from "fs";
@@ -36,7 +37,6 @@ const client = new Client({
     GatewayIntentBits.GuildVoiceStates,
   ],
 });
-const selectCache = new SelectCache();
 client.commands = new Collection();
 // Load commands
 const __filename = fileURLToPath(import.meta.url);
@@ -242,31 +242,6 @@ async function deletePlayer(msg) {
   }
 }
 
-async function addPerk(msg) {
-  let tmp = msg.content.split(" ");
-  if (tmp.length != 2) {
-    await msg.channel.send("?ajouterPerk @joueur");
-    return;
-  }
-  let id = msg.content
-    .split(" ")[1]
-    .replace("@", "")
-    .replace("<", "")
-    .replace(">", "");
-  let player = db.getPlayerFromAuthorId(id, msg.guild.id);
-  if (player.length == 1) {
-    let container = perkSelectionContainer(msg.author.id, player[0]);
-    await msg.reply({
-      components: [container],
-      flags: MessageFlags.IsComponentsV2,
-    });
-  } else if (player.length > 1) {
-    selectPlayer(msg, "addPerk", []);
-  } else {
-    await msg.channel.send("Ce joueur n'existe pas");
-  }
-}
-
 /**
  * Handler for interaction with buttons, displays corresponding modal
  * or triggers correct action (for example container submit)
@@ -333,52 +308,6 @@ async function ButtonInteraction(interaction) {
       }
       break;
   }
-}
-
-/**
- * Create new player based on submission from @see perkCreationContainer
- * @param {*} interaction interaction from validate button
- */
-function perkSubmit(interaction) {
-  var container = interaction.message.components[0];
-  var name = container.components[0].accessory.customId.split("/")[2];
-  var perkName = container.components[0].accessory.data.label;
-  var numModifiers = Math.min(
-    Math.ceil((container.components.length - 4) / 2),
-    4
-  );
-  if (container.components[0].accessory.data.type == "1") {
-    //name not entered
-    return false;
-  }
-  for (let i = 0; i < numModifiers; i++) {
-    if (
-      !selectCache.exists(
-        container.components[2 + i * 2].components[0].customId
-      ) ||
-      !selectCache.exists(
-        container.components[3 + i * 2].components[0].customId
-      )
-    ) {
-      return false;
-    }
-  }
-  var condition =
-    container.components[1].accessory.data.style == 2
-      ? container.components[1].accessory.data.label
-      : "";
-  db.addPerk(perkName, condition);
-  for (let i = 0; i < numModifiers; i++) {
-    var stat = selectCache.pop(
-      container.components[2 + i * 2].components[0].customId
-    );
-    var value = selectCache.pop(
-      container.components[3 + i * 2].components[0].customId
-    );
-    db.addModifier(perkName, stat, value);
-  }
-  db.addPlayerPerk(perkName, name);
-  return true;
 }
 
 /**

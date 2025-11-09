@@ -25,8 +25,6 @@ export async function executeInteraction(
     });
   }
   await interaction.reply({ embeds: [embed] });
-
-  await interaction.reply("Status command");
 }
 
 export async function executeMessage(msg: Message) {

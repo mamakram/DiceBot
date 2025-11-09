@@ -25,3 +25,5 @@ export class SelectCache {
     return ret;
   }
 }
+
+export const selectCache = new SelectCache();

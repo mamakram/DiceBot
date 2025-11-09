@@ -20,4 +20,4 @@ export async function executeInteraction(
   await interaction.reply("Delete command");
 }
 
-export async function executeMessage(command: Message) {}
+export async function executeMessage(msg: Message) {}
