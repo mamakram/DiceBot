@@ -11,7 +11,7 @@ import {
  */
 export const data = new SlashCommandBuilder()
   .setName("help")
-  .setDescription("Help message");
+  .setDescription("Message d'aide");
 
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction

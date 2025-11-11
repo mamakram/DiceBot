@@ -28,6 +28,7 @@ import { playerSubmit } from "./commands/createPlayer.ts";
 import { perkSubmit } from "./commands/addPerk.ts";
 import { itemSubmit } from "./commands/addItem.ts";
 import { equipmentSubmit } from "./commands/addEquipment.ts";
+import { fr } from "../locales/fr.ts";
 
 // Node core modules
 import fs from "fs";
@@ -105,24 +106,22 @@ client.on("messageCreate", async (msg) => {
   if (msg.author.bot) return; // Ignore messages from bots and self
   const query = msg.content.split(" ")[0];
   // Map message commands to slash commands
-  //: Record<string, string> =
   const commandMap = {
-    "?r": "roll",
-    "?info": "info",
-    "?inventaire": "inventaire",
-    "?nouveau": "nouveau",
-    "?ajouterPV": "ajouterpv",
-    "?enleverPV": "enleverpv",
-    "?supprimer": "supprimer",
-    "?statut": "statut",
-    "?ajouterPerk": "ajouterperk",
-    "?ajouterEquipement": "ajouterEquipement",
-    "?ajouterItem": "ajouterItem",
-    "?help": "help",
-    "?quitter": "quitter",
-    "?play": "play",
+    [fr.textCommands.roll]: fr.slashCommands.roll,
+    [fr.textCommands.info]: fr.slashCommands.info,
+    [fr.textCommands.inventory]: fr.slashCommands.inventory,
+    [fr.textCommands.new]: fr.slashCommands.new,
+    [fr.textCommands.addHP]: fr.slashCommands.addHP,
+    [fr.textCommands.removeHP]: fr.slashCommands.removeHP,
+    [fr.textCommands.delete]: fr.slashCommands.delete,
+    [fr.textCommands.status]: fr.slashCommands.status,
+    [fr.textCommands.addPerk]: fr.slashCommands.addPerk,
+    [fr.textCommands.addEquipment]: fr.slashCommands.addEquipment,
+    [fr.textCommands.addItem]: fr.slashCommands.addItem,
+    [fr.textCommands.help]: fr.slashCommands.help,
+    [fr.textCommands.quit]: fr.slashCommands.quit,
+    [fr.textCommands.play]: fr.slashCommands.play,
   };
-
   const commandName = commandMap[query];
 
   if (commandName) {
@@ -132,7 +131,7 @@ client.on("messageCreate", async (msg) => {
         await command.executeMessage(msg);
       } catch (error) {
         console.error(`Error executing message command ${query}:`, error);
-        await msg.channel.send("Erreur");
+        await msg.channel.send(fr.error.generic);
       }
     }
   }
@@ -148,32 +147,34 @@ function applyFunction(call, params) {
     case "db.modifyHP":
       db.modifyHP(params[0], parseInt(params[1]));
       var p = db.getInfoPlayer(params[0]);
-      return params[0] + " a " + p.getHp() + " PV";
+      return fr.success.playerHP(params[0], p.getHp());
     case "db.removePlayer":
       db.removePlayer(params[0]);
-      return params[0] + " a été supprimé !";
+      return fr.success.playerDeleted(params[0]);
     case "db.getInfoPlayer":
       var p = db.getInfoPlayer(params[0]);
       return { embeds: [p.toEmbed()] };
     case "db.addProfilePic":
       db.addProfilePic(params[0], params[1]);
-      return "Image ajoutée";
+      return fr.success.imageAdded;
   }
 }
 
 const stringInputText = {
-  enterPerkName: ["Nom de la perk", "perkName"],
-  enterItemName: ["Nom de l'item", "itemName"],
-  enterEquipmentName: ["Nom de l'équipement", "equipmentName"],
-  enterCondition: ["Condition de la perk", "condition"],
-  enterPlayerName: ["Nom du joueur", "playerName"],
+  enterPerkName: [fr.modal.enterPerkName, "perkName"],
+  enterItemName: [fr.modal.enterItemName, "itemName"],
+  enterEquipmentName: [fr.modal.enterEquipmentName, "equipmentName"],
+  enterCondition: [fr.modal.enterCondition, "condition"],
+  enterPlayerName: [fr.modal.enterPlayerName, "playerName"],
 };
+
 const SubmitData = {
-  itemSubmit: [itemSubmit, "Item ajouté !"],
-  perkSubmit: [perkSubmit, "Perk ajoutée !"],
-  playerSubmit: [playerSubmit, "Personnage créé !"],
-  equipmentSubmit: [equipmentSubmit, "Equipement ajouté !"],
+  itemSubmit: [itemSubmit, fr.success.itemAdded],
+  perkSubmit: [perkSubmit, fr.success.perkAdded],
+  playerSubmit: [playerSubmit, fr.success.characterCreated],
+  equipmentSubmit: [equipmentSubmit, fr.success.equipmentAdded],
 };
+
 /**
  * Handler for interaction with buttons, displays corresponding modal
  * or triggers correct action (for example container submit)
@@ -251,7 +252,7 @@ async function ButtonInteraction(interaction) {
         interaction.reply(SubmitData[interactionId][1]);
         interaction.message.delete();
       } else {
-        interaction.reply("Il manque des valeurs.");
+        interaction.reply(fr.error.missingValues);
       }
       break;
   }
@@ -278,7 +279,7 @@ async function stringInput(interaction) {
         (stringName == "playerName" && db.getInfoPlayer(value))
       ) {
         //name already used
-        container.components[0].accessory.data.label = "Nom déjà utilisé";
+        container.components[0].accessory.data.label = fr.error.nameAlreadyUsed;
       } else {
         container.components[0].accessory.data.label = value;
         container.components[0].accessory.data.style = ButtonStyle.Secondary;
@@ -314,10 +315,11 @@ async function ModalInteraction(interaction) {
 }
 
 const SelectData = {
-  itemSelect: [db.addPlayerItem, "Item ajouté !"],
-  perkSelect: [db.addPlayerPerk, "Perk ajoutée !"],
-  equipmentSelect: [db.addPlayerEquipment, "Equipement ajouté !"],
+  itemSelect: [db.addPlayerItem, fr.success.itemAdded],
+  perkSelect: [db.addPlayerPerk, fr.success.perkAdded],
+  equipmentSelect: [db.addPlayerEquipment, fr.success.equipmentAdded],
 };
+
 async function stringSelectInteraction(interaction) {
   var info = interaction.customId.split("/");
   var customId = info[0].replace(/[0-9]/g, "");
