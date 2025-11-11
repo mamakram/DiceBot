@@ -1,14 +1,16 @@
+import { EmbedBuilder } from "@discordjs/builders";
+
 export class Item {
-  name: string;
-  description: string = "";
+  _name: string;
+  _description: string = "";
   constructor(name: string, description: string = "") {
-    this.name = name;
-    this.description = description;
+    this._name = name;
+    this._description = description;
   }
-  getName() {
-    return this.name;
+  get name() {
+    return this._name;
   }
-  getDescription() {
-    return this.description;
+  get description() {
+    return this._description;
   }
 }

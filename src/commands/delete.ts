@@ -40,11 +40,7 @@ export async function executeMessage(msg: Message) {
       await msg.channel.send("?supprimer @joueur");
       return;
     }
-    let id = msg.content
-      .split(" ")[1]
-      .replace("@", "")
-      .replace("<", "")
-      .replace(">", "");
+    var id = msg.content.split(" ")[1].replace(/[@<>]/g, "");
     let player = db.getPlayerFromAuthorId(id, msg.guild?.id ?? "");
     if (player.length == 1) {
       db.removePlayer(player[0]);

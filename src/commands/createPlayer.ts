@@ -11,7 +11,7 @@ import {
   ButtonComponent,
 } from "discord.js";
 
-import { playerCreationContainer } from "../menus.js";
+import { playerCreationContainer } from "../menus.ts";
 import { selectCache } from "../SelectCache.ts";
 import { STATS } from "../utils.ts";
 import * as db from "../database.ts";

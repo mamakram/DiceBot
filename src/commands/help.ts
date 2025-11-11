@@ -35,7 +35,7 @@ function helpEmbed() {
     .addFields(
       { name: "Lancer de dés", value: "" },
       { name: "?r _d_", value: "jette un dé. Exemple: ?r 2d6" },
-      { name: "\u200B", value: "\u200B" }
+      { name: "\u200B", value: "" }
     )
     .addFields(
       { name: "Sons", value: "" },
@@ -49,7 +49,7 @@ function helpEmbed() {
         value: "déconnecte le bot du channel vocal",
         inline: true,
       },
-      { name: "\u200B", value: "\u200B" }
+      { name: "\u200B", value: "" }
     )
     .addFields(
       {
@@ -65,6 +65,21 @@ function helpEmbed() {
       {
         name: "?supprimer @joueur",
         value: "Supprime le personnage",
+        inline: true,
+      },
+      {
+        name: "?ajouterperk @joueur",
+        value: "Ajouter une nouvelle perk au joueur",
+        inline: true,
+      },
+      {
+        name: "?ajouterequipement @joueur",
+        value: "Ajouter un équipement au joueur",
+        inline: true,
+      },
+      {
+        name: "?ajouteritem @joueur",
+        value: "Ajouter un item au joueur",
         inline: true,
       },
       {

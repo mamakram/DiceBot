@@ -14,14 +14,14 @@ import { selectPlayer } from "../selectPlayer.ts";
  */
 export const data = new SlashCommandBuilder()
   .setName("ajouterpv")
-  .setDescription("Add HP to a player")
+  .setDescription("Ajouter des PV à un joueur")
   .addUserOption((option) =>
-    option.setName("user").setDescription("The user").setRequired(true)
+    option.setName("user").setDescription("L'utilisateur").setRequired(true)
   )
   .addIntegerOption((option) =>
     option
       .setName("amount")
-      .setDescription("Amount of HP to add")
+      .setDescription("Quantité de PV à ajouter")
       .setRequired(true)
   );
 
@@ -48,13 +48,13 @@ export async function executeInteraction(
 
 export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
-    let tmp = msg.content.split(" ");
-    if (tmp.length != 3) {
+    let args = msg.content.split(" ");
+    if (args.length != 3) {
       await msg.channel.send("?ajouterPV @joueur quantité");
       return;
     }
-    let amount = parseInt(tmp[2]) ?? 0;
-    let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
+    let amount = parseInt(args[2]) ?? 0;
+    let id = args[1].replace(/[@<>]/g, "");
     let player = db.getPlayerFromAuthorId(id, msg.guild?.id ?? "");
     if (player.length == 1) {
       db.modifyHP(player[0], amount);

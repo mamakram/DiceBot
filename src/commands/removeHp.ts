@@ -49,13 +49,13 @@ export async function executeInteraction(
 }
 export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
-    let tmp = msg.content.split(" ");
-    if (tmp.length != 3) {
+    let args = msg.content.split(" ");
+    if (args.length != 3) {
       await msg.channel.send("?enleverPV @joueur quantité");
       return;
     }
-    let amount = parseInt(tmp[2]) ?? 0;
-    let id = tmp[1].replace("@", "").replace("<", "").replace(">", "");
+    let amount = parseInt(args[2]) ?? 0;
+    var id = args[1].replace(/[@<>]/g, "");
     let player = db.getPlayerFromAuthorId(id, msg.guild?.id ?? "");
     if (player.length == 1) {
       db.modifyHP(player[0], -amount);

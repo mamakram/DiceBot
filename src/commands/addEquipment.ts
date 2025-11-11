@@ -14,16 +14,18 @@ import {
 } from "discord.js";
 import * as db from "../database.ts";
 import {
-  perkCreationContainer,
+  equipmentCreationContainer,
   SelectionContainer,
   SelectionTypes,
 } from "../menus.ts";
+import { BodyParts } from "../objects/Equipment.ts";
 import { selectCache } from "../SelectCache.ts";
 import { selectPlayer } from "../selectPlayer.ts";
+type BodyPart = (typeof BodyParts)[keyof typeof BodyParts];
 
 export const data = new SlashCommandBuilder()
-  .setName("ajouterperk")
-  .setDescription("Ajouter une qualité/défaut à un joueur")
+  .setName("ajouterequipement")
+  .setDescription("Ajouter un équipement à un joueur")
   .addUserOption((option) =>
     option.setName("user").setDescription("L'utilisateur").setRequired(true)
   );
@@ -41,14 +43,14 @@ export async function executeInteraction(
       let container = SelectionContainer(
         member.id,
         player[0],
-        SelectionTypes.Perk
+        SelectionTypes.Equipment
       );
       await interaction.reply({
         components: [container],
         flags: MessageFlags.IsComponentsV2,
       });
     } else if (player.length > 1) {
-      selectPlayer(interaction, "addPerk", []);
+      selectPlayer(interaction, "addEquipment", []);
     } else {
       await interaction.reply("Ce joueur n'existe pas");
     }
@@ -68,14 +70,14 @@ export async function executeMessage(msg: Message) {
       let container = SelectionContainer(
         msg.author.id,
         player[0],
-        SelectionTypes.Perk
+        SelectionTypes.Equipment
       );
       await msg.reply({
         components: [container],
         flags: MessageFlags.IsComponentsV2,
       });
     } else if (player.length > 1) {
-      selectPlayer(msg, "addPerk", []);
+      selectPlayer(msg, "addEquipment", []);
     } else {
       await msg.channel.send("Ce joueur n'existe pas");
     }
@@ -83,21 +85,22 @@ export async function executeMessage(msg: Message) {
 }
 
 /**
- * Create new perk based on submission from @see perkCreationContainer
+ * Create new equipment based on submission from @see equipmentCreationContainer
  * @param {*} interaction interaction from validate button
  */
-export function perkSubmit(interaction: ButtonInteraction) {
+export function equipmentSubmit(interaction: ButtonInteraction) {
   var container = interaction.message.components[0] as ContainerComponent;
-  var perkNameButton = (container.components[0] as unknown as SectionComponent)
-    .accessory as ButtonComponent;
-  if (perkNameButton) {
-    var name = perkNameButton.customId?.split("/")[2] ?? "";
-    var perkName = perkNameButton.label ?? "";
+  var equipmentNameButton = (
+    container.components[0] as unknown as SectionComponent
+  ).accessory as ButtonComponent;
+  if (equipmentNameButton) {
+    var name = equipmentNameButton.customId?.split("/")[2] ?? "";
+    var equipmentName = equipmentNameButton.label ?? "";
     var numModifiers = Math.min(
-      Math.ceil((container.components.length - 4) / 2),
+      Math.ceil((container.components.length - 5) / 2),
       4
     );
-    if (perkNameButton.style == ButtonStyle.Primary) {
+    if (equipmentNameButton.style == ButtonStyle.Primary) {
       //name not entered
       return false;
     }
@@ -119,33 +122,39 @@ export function perkSubmit(interaction: ButtonInteraction) {
         return false;
       }
     }
-    var conditionButton = (
+    var descriptionButton = (
       container.components[1] as unknown as SectionComponent
     ).accessory as ButtonComponent;
-    var condition =
-      conditionButton.style == ButtonStyle.Secondary
-        ? conditionButton.label ?? ""
+    var description =
+      descriptionButton.style == ButtonStyle.Secondary
+        ? descriptionButton.label ?? ""
         : "";
-    db.addPerk(perkName, condition);
+    var bodypart = parseInt(
+      selectCache.pop(
+        (container.components[2] as unknown as ActionRow<any>).components[0]
+          .customId
+      ) ?? ""
+    ) as BodyPart;
+    db.addEquipment(equipmentName, description, bodypart);
     for (let i = 0; i < numModifiers; i++) {
       var stat =
         selectCache.pop(
           (
-            (container.components[2 + i * 2] as unknown as ActionRow<any>)
+            (container.components[3 + i * 2] as unknown as ActionRow<any>)
               .components[0] as unknown as StringSelectMenuComponent
           ).customId
         ) ?? "";
       var value = parseInt(
         selectCache.pop(
           (
-            (container.components[3 + i * 2] as unknown as ActionRow<any>)
+            (container.components[4 + i * 2] as unknown as ActionRow<any>)
               .components[0] as unknown as StringSelectMenuComponent
           ).customId
         ) ?? ""
       );
-      db.addPerkModifier(perkName, stat, value);
+      db.addEquipmentModifier(equipmentName, stat, value);
     }
-    db.addPlayerPerk(perkName, name);
+    db.addPlayerEquipment(equipmentName, name);
     return true;
   }
 }

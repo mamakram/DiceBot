@@ -15,14 +15,20 @@ import {
 } from "discord.js";
 import * as db from "./database.ts";
 import {
-  perkSelectionContainer,
+  SelectionContainer,
   perkCreationContainer,
+  itemCreationContainer,
+  equipmentCreationContainer,
   modifierComponent,
   stringInputModal,
-} from "./menus.js";
+  SelectionTypes,
+} from "./menus.ts";
 import { selectCache } from "./SelectCache.ts";
 import { playerSubmit } from "./commands/createPlayer.ts";
 import { perkSubmit } from "./commands/addPerk.ts";
+import { itemSubmit } from "./commands/addItem.ts";
+import { equipmentSubmit } from "./commands/addEquipment.ts";
+
 // Node core modules
 import fs from "fs";
 import path from "path";
@@ -45,10 +51,9 @@ const __dirname = path.dirname(__filename);
 const commandsPath = path.join(__dirname, "commands");
 const commandFiles = fs
   .readdirSync(commandsPath)
-  .filter((file) => file.endsWith(".ts") || file.endsWith(".js"));
+  .filter((file) => file.endsWith(".ts"));
 
 const commands = [];
-//TODO add inventory and equipment
 //TODO maybe add rivalries
 //TODO calculate skill throws
 //TODO add comprehensive way to add ennemies/NPC
@@ -104,12 +109,15 @@ client.on("messageCreate", async (msg) => {
   const commandMap = {
     "?r": "roll",
     "?info": "info",
+    "?inventaire": "inventaire",
     "?nouveau": "nouveau",
     "?ajouterPV": "ajouterpv",
     "?enleverPV": "enleverpv",
     "?supprimer": "supprimer",
     "?statut": "statut",
     "?ajouterPerk": "ajouterperk",
+    "?ajouterEquipement": "ajouterEquipement",
+    "?ajouterItem": "ajouterItem",
     "?help": "help",
     "?quitter": "quitter",
     "?play": "play",
@@ -124,7 +132,7 @@ client.on("messageCreate", async (msg) => {
         await command.executeMessage(msg);
       } catch (error) {
         console.error(`Error executing message command ${query}:`, error);
-        await msg.channel.send("There was an error executing that command!");
+        await msg.channel.send("Erreur");
       }
     }
   }
@@ -153,6 +161,19 @@ function applyFunction(call, params) {
   }
 }
 
+const stringInputText = {
+  enterPerkName: ["Nom de la perk", "perkName"],
+  enterItemName: ["Nom de l'item", "itemName"],
+  enterEquipmentName: ["Nom de l'équipement", "equipmentName"],
+  enterCondition: ["Condition de la perk", "condition"],
+  enterPlayerName: ["Nom du joueur", "playerName"],
+};
+const SubmitData = {
+  itemSubmit: [itemSubmit, "Item ajouté !"],
+  perkSubmit: [perkSubmit, "Perk ajoutée !"],
+  playerSubmit: [playerSubmit, "Personnage créé !"],
+  equipmentSubmit: [equipmentSubmit, "Equipement ajouté !"],
+};
 /**
  * Handler for interaction with buttons, displays corresponding modal
  * or triggers correct action (for example container submit)
@@ -164,16 +185,34 @@ async function ButtonInteraction(interaction) {
   let modal = new ModalBuilder();
   switch (interactionId) {
     case "enterPerkName":
-      modal = stringInputModal("Nom de la perk", "perkName");
-      await interaction.showModal(modal);
-      break;
+    case "enterItemName":
+    case "enterEquipmentName":
     case "enterCondition":
-      modal = stringInputModal("Condition de la perk", "condition");
+    case "enterPlayerName":
+      modal = stringInputModal(
+        interaction.user.id,
+        stringInputText[interactionId][0],
+        stringInputText[interactionId][1]
+      );
       await interaction.showModal(modal);
       break;
-    case "enterPlayerName":
-      modal = stringInputModal("Nom du joueur", "playerName");
-      await interaction.showModal(modal);
+    case "openItemContainer":
+      var name = interaction.customId.split("/")[2];
+      var container = itemCreationContainer(interaction.user.id, name);
+      await interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      await interaction.message.delete();
+      break;
+    case "openEquipmentContainer":
+      var name = interaction.customId.split("/")[2];
+      var container = equipmentCreationContainer(interaction.user.id, name);
+      await interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+      await interaction.message.delete();
       break;
     case "openPerkContainer":
       var name = interaction.customId.split("/")[2];
@@ -200,19 +239,16 @@ async function ButtonInteraction(interaction) {
       });
       await interaction.deferUpdate();
       break;
+    /** @see itemCreationContainer Submit Item*/
+    case "itemSubmit":
+    /** @see equipmentCreationContainer Submit equipment*/
+    case "equipmentSubmit":
     /**@see perkCreationContainer Submit the perk*/
     case "perkSubmit":
-      if (perkSubmit(interaction)) {
-        await interaction.reply("Perk ajoutée !");
-        await interaction.message.delete();
-      } else {
-        interaction.reply("Il manque des valeurs.");
-      }
-      break;
     /**@see playerCreationContainer Submit the Player */
     case "playerSubmit":
-      if (playerSubmit(interaction)) {
-        interaction.reply("Personnage créé !");
+      if (SubmitData[interactionId][0](interaction)) {
+        interaction.reply(SubmitData[interactionId][1]);
         interaction.message.delete();
       } else {
         interaction.reply("Il manque des valeurs.");
@@ -231,19 +267,16 @@ async function stringInput(interaction) {
   let stringName = interaction.components[0].component.customId;
   let value = interaction.components[0].component.value;
   switch (stringName) {
-    /**@see perkCreationContainer */
     case "playerName":
-      if (db.getInfoPlayer(value)) {
-        //name already used
-        container.components[0].accessory.data.label = "Nom déjà utilisé";
-      } else {
-        container.components[0].accessory.data.label = value;
-        container.components[0].accessory.data.style = ButtonStyle.Secondary;
-        container.components[0].accessory.data.disabled = true;
-      }
-      break;
+    case "equipmentName":
+    case "itemName":
     case "perkName":
-      if (db.getPerk(value)) {
+      if (
+        (stringName == "perkName" && db.getPerk(value)) ||
+        (stringName == "itemName" && db.getItem(value)) ||
+        (stringName == "equipmentName" && db.getEquipment(value)) ||
+        (stringName == "playerName" && db.getInfoPlayer(value))
+      ) {
         //name already used
         container.components[0].accessory.data.label = "Nom déjà utilisé";
       } else {
@@ -271,7 +304,7 @@ async function stringInput(interaction) {
  * @param {*} interaction
  */
 async function ModalInteraction(interaction) {
-  switch (interaction.customId) {
+  switch (interaction.customId.split("/")[0]) {
     /** @see stringInputModal */
     case "stringInputModal":
       stringInput(interaction);
@@ -279,6 +312,12 @@ async function ModalInteraction(interaction) {
       break;
   }
 }
+
+const SelectData = {
+  itemSelect: [db.addPlayerItem, "Item ajouté !"],
+  perkSelect: [db.addPlayerPerk, "Perk ajoutée !"],
+  equipmentSelect: [db.addPlayerEquipment, "Equipement ajouté !"],
+};
 async function stringSelectInteraction(interaction) {
   var info = interaction.customId.split("/");
   var customId = info[0].replace(/[0-9]/g, "");
@@ -288,7 +327,11 @@ async function stringSelectInteraction(interaction) {
       var selected = interaction.values[0];
       var info = interaction.customId.split("/");
       if (info[2] == "addPerk") {
-        let container = perkSelectionContainer(interaction.user.id, selected);
+        let container = SelectionContainer(
+          interaction.user.id,
+          selected,
+          SelectionTypes.Perk
+        );
         await interaction.reply({
           components: [container],
           flags: MessageFlags.IsComponentsV2,
@@ -301,24 +344,28 @@ async function stringSelectInteraction(interaction) {
       }
       await interaction.message.delete();
       break;
-    /** @see perkSelectionContainer */
+    /** @see SelectionContainer */
+    case "itemSelect":
+    case "equipmentSelect":
     case "perkSelect":
       var selected = interaction.values[0];
       if (selected != "undefined") {
-        //undefined when no perks exist
+        //undefined when no values exist
         var info = interaction.customId.split("/");
-        db.addPlayerPerk(selected, info[2]);
+        SelectData[customId][0](selected, info[2]);
         await interaction.message.delete();
-        await interaction.reply("Perk ajoutée !");
+        await interaction.reply(SelectData[customId][1]);
       } else {
         interaction.deferUpdate();
       }
       break;
     /**
-     * @see modifierComponent and @see playerCreationContainer
+     * @see modifierComponent @see playerCreationContainer @see equipmentCreationContainer @see itemCreationContainer
      * Fill to placeholder and defer update
      */
+    case "bodyPartSelect":
     case "hpSelect":
+    case "amountSelect":
     case "modStatSelect":
     case "modValueSelect":
     case "playerStatSelect":
@@ -338,28 +385,21 @@ client.on("interactionCreate", async (interaction) => {
       console.error(error);
     }
   }
-  //Only allow user who requested to press the Button
-  if (
-    interaction.isButton() &&
-    interaction.customId.includes(interaction.user.id)
-  ) {
-    ButtonInteraction(interaction);
-  }
-  if (interaction.isModalSubmit()) {
-    ModalInteraction(interaction);
-  }
-  if (
-    interaction.isStringSelectMenu() &&
-    interaction.customId.includes(interaction.user.id)
-  ) {
-    stringSelectInteraction(interaction);
-  }
-  if (
-    interaction.isUserSelectMenu() &&
-    interaction.customId.includes(interaction.user.id)
-  ) {
-    selectCache.push(interaction.customId, interaction.values[0]);
-    interaction.deferUpdate();
+  //Only allow user who requested to complete interaction
+  else if (interaction.customId.includes(interaction.user.id)) {
+    if (interaction.isButton()) {
+      ButtonInteraction(interaction);
+    }
+    if (interaction.isModalSubmit()) {
+      ModalInteraction(interaction);
+    }
+    if (interaction.isStringSelectMenu()) {
+      stringSelectInteraction(interaction);
+    }
+    if (interaction.isUserSelectMenu()) {
+      selectCache.push(interaction.customId, interaction.values[0]); //cache userSelect option in containers
+      interaction.deferUpdate();
+    }
   }
 });
 

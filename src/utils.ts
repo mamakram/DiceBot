@@ -3,7 +3,7 @@ import {
   Message,
   ChatInputCommandInteraction,
 } from "discord.js";
-import * as db from "./database.ts";
+import { BodyParts, BodyPartNames } from "./objects/Equipment.ts";
 
 export const DEFAULT_PROFILE_PICTURE =
   "https://upload.wikimedia.org/wikipedia/commons/0/03/Twitter_default_profile_400x400.png?20240121032759";
@@ -83,13 +83,13 @@ export function statOptions(): StringSelectMenuOptionBuilder[] {
   return options;
 }
 
-export function perkOptions(): StringSelectMenuOptionBuilder[] {
+export function bodyPartOptions(): StringSelectMenuOptionBuilder[] {
   let options = [];
-  for (var perk of db.getAllPerkNames()) {
+  for (var part in Object.values(BodyParts)) {
     options.push(
       new StringSelectMenuOptionBuilder()
-        .setLabel(perk.NAME)
-        .setValue(perk.NAME)
+        .setLabel(BodyPartNames[parseInt(part)])
+        .setValue(part)
     );
   }
   return options;
