@@ -15,13 +15,15 @@ import { playerCreationContainer } from "../menus.ts";
 import { selectCache } from "../SelectCache.ts";
 import { STATS } from "../utils.ts";
 import * as db from "../database.ts";
+import { fr } from "../locales/fr.ts";
+
 /**
  * create new player
  * @param {*} msg discord message
  */
 export const data = new SlashCommandBuilder()
-  .setName("nouveau")
-  .setDescription("Créer un nouveau personnage");
+  .setName(fr.slashCommands.new)
+  .setDescription(fr.commandDescriptions.createPlayer);
 
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction

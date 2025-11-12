@@ -6,15 +6,19 @@ import {
 } from "discord.js";
 import * as db from "../database.ts";
 import { selectPlayer } from "../selectPlayer.ts";
+import { fr } from "../locales/fr.ts";
 
 /**return Info for a given player based on discord id
  * If multiple players exist, shows a selection menu to choose
  * **/
 export const data = new SlashCommandBuilder()
-  .setName("inventaire")
-  .setDescription("Inventaire d'un personnage")
+  .setName(fr.slashCommands.inventory)
+  .setDescription(fr.commandDescriptions.inventory)
   .addUserOption((option) =>
-    option.setName("user").setDescription("L'utilisateur").setRequired(true)
+    option
+      .setName("user")
+      .setDescription(fr.optionDescriptions.user)
+      .setRequired(true)
   );
 
 export async function executeInteraction(
@@ -30,14 +34,14 @@ export async function executeInteraction(
   } else if (player.length > 1) {
     selectPlayer(interaction, "db.getInventory", []);
   } else {
-    await interaction.reply("Ce joueur n'existe pas");
+    await interaction.reply(fr.error.playerDoesNotExist);
   }
 }
 export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
     let args = msg.content.split(" ");
     if (args.length != 2) {
-      await msg.channel.send("?inventaire @joueur");
+      await msg.channel.send(fr.usage.inventory);
       return;
     }
     var id = args[1].replace(/[@<>]/g, "");
@@ -50,7 +54,7 @@ export async function executeMessage(msg: Message) {
     } else if (player.length > 1) {
       selectPlayer(msg, "db.getInventory", []);
     } else {
-      await msg.channel.send("Ce joueur n'existe pas");
+      await msg.channel.send(fr.error.playerDoesNotExist);
     }
   }
 }

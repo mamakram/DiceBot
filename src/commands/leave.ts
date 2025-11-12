@@ -4,16 +4,17 @@ import {
   Message,
 } from "discord.js";
 import { disconnect } from "../musicplayer.ts";
+import { fr } from "../locales/fr.ts";
 
 export const data = new SlashCommandBuilder()
-  .setName("quitter")
-  .setDescription("Quitte le channel vocal");
+  .setName(fr.slashCommands.quit)
+  .setDescription(fr.commandDescriptions.leave);
 
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
   disconnect(interaction);
-  await interaction.reply("Déconnecté du vocal");
+  await interaction.reply(fr.success.disconnected);
 }
 
 export async function executeMessage(msg: Message) {

@@ -19,14 +19,19 @@ import {
 } from "../menus.ts";
 import { selectCache } from "../SelectCache.ts";
 import { selectPlayer } from "../selectPlayer.ts";
+import { fr } from "../locales/fr.ts";
 
 export const data = new SlashCommandBuilder()
-  .setName("ajouteritem")
-  .setDescription("Ajouter un item à un joueur")
+  .setName(fr.slashCommands.addItem)
+  .setDescription(fr.commandDescriptions.addItem)
   .addUserOption((option) =>
-    option.setName("user").setDescription("L'utilisateur").setRequired(true)
+    option
+      .setName("user")
+      .setDescription(fr.optionDescriptions.user)
+      .setRequired(true)
   );
 
+//TODO: add amount choice on selection possibly
 export async function executeInteraction(
   interaction: ChatInputCommandInteraction
 ) {
@@ -49,7 +54,7 @@ export async function executeInteraction(
     } else if (player.length > 1) {
       selectPlayer(interaction, "addItem", []);
     } else {
-      await interaction.reply("Ce joueur n'existe pas");
+      await interaction.reply(fr.error.playerDoesNotExist);
     }
   }
 }
@@ -58,7 +63,7 @@ export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
     var tmp = msg.content.split(" ");
     if (tmp.length != 2) {
-      await msg.channel.send("?ajouterItem @joueur");
+      await msg.channel.send(fr.usage.addItem);
       return;
     }
     var id = msg.content.split(" ")[1].replace(/[@<>]/g, "");
@@ -76,7 +81,7 @@ export async function executeMessage(msg: Message) {
     } else if (player.length > 1) {
       selectPlayer(msg, "addItem", []);
     } else {
-      await msg.channel.send("Ce joueur n'existe pas");
+      await msg.channel.send(fr.error.playerDoesNotExist);
     }
   }
 }

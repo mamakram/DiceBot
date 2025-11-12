@@ -5,6 +5,7 @@ import {
   SlashCommandStringOption,
   TextChannel,
 } from "discord.js";
+import { fr } from "../locales/fr.ts";
 
 const start = "```ansi\n" + "\u001b[0;37m ";
 const end = " ```";
@@ -16,12 +17,12 @@ const MAX_MESSAGE_LENGTH = 850;
  */
 
 export const data = new SlashCommandBuilder()
-  .setName("roll")
-  .setDescription("Lancer de dés")
+  .setName(fr.slashCommands.roll)
+  .setDescription(fr.commandDescriptions.roll)
   .addStringOption(
     new SlashCommandStringOption()
       .setName("dice")
-      .setDescription("Dé a lancer (e.g., 2d6)")
+      .setDescription(fr.optionDescriptions.dice)
       .setRequired(true)
   );
 
@@ -46,7 +47,7 @@ export async function executeMessage(command: Message) {
   }
   let array = command.content.split(" ");
   if (array.length != 2) {
-    await command.channel.send("Erreur : mauvaise syntaxe");
+    await command.channel.send(fr.error.badSyntax);
     return;
   }
   let content = array[1];
@@ -67,14 +68,14 @@ export async function executeMessage(command: Message) {
 function diceRoll(command: string): string {
   let array2 = command.split("d");
   if (array2.length != 2) {
-    return "Erreur : mauvaise syntaxe";
+    return fr.error.badSyntax;
   } else {
     let amount = parseInt(array2[0]);
     let cap = parseInt(array2[1]);
     let sum = 0;
     let critic_success = Math.floor((cap / 100) * 10);
     let critic_fail = Math.floor((cap / 100) * 90 + 1);
-    let output = "Result : ";
+    let output = fr.diceRoll.result;
     let counter = amount;
     while (counter > 0) {
       let die = Math.floor(Math.random() * cap) + 1;
@@ -91,9 +92,9 @@ function diceRoll(command: string): string {
       sum += die;
       counter -= 1;
     }
-    output += " (" + amount + "d" + cap + ")";
+    output += fr.diceRoll.format(amount, cap);
     if (amount > 1) {
-      output += "\nSum: " + sum;
+      output += fr.diceRoll.sum + sum;
     }
     return output;
   }

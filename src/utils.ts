@@ -4,6 +4,7 @@ import {
   ChatInputCommandInteraction,
 } from "discord.js";
 import { BodyParts, BodyPartNames } from "./objects/Equipment.ts";
+import { SelectionTypes } from "./menus.ts";
 
 export const DEFAULT_PROFILE_PICTURE =
   "https://upload.wikimedia.org/wikipedia/commons/0/03/Twitter_default_profile_400x400.png?20240121032759";
@@ -93,4 +94,15 @@ export function bodyPartOptions(): StringSelectMenuOptionBuilder[] {
     );
   }
   return options;
+}
+
+export function getSelectionType(type: String) {
+  switch (type) {
+    case "addPerk":
+      return SelectionTypes.Perk;
+    case "addEquipment":
+      return SelectionTypes.Equipment;
+    case "addItem":
+      return SelectionTypes.Item;
+  }
 }

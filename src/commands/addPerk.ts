@@ -20,12 +20,16 @@ import {
 } from "../menus.ts";
 import { selectCache } from "../SelectCache.ts";
 import { selectPlayer } from "../selectPlayer.ts";
+import { fr } from "../locales/fr.ts";
 
 export const data = new SlashCommandBuilder()
-  .setName("ajouterperk")
-  .setDescription("Ajouter une qualité/défaut à un joueur")
+  .setName(fr.slashCommands.addPerk)
+  .setDescription(fr.commandDescriptions.addPerk)
   .addUserOption((option) =>
-    option.setName("user").setDescription("L'utilisateur").setRequired(true)
+    option
+      .setName("user")
+      .setDescription(fr.optionDescriptions.user)
+      .setRequired(true)
   );
 
 export async function executeInteraction(
@@ -50,7 +54,7 @@ export async function executeInteraction(
     } else if (player.length > 1) {
       selectPlayer(interaction, "addPerk", []);
     } else {
-      await interaction.reply("Ce joueur n'existe pas");
+      await interaction.reply(fr.error.playerDoesNotExist);
     }
   }
 }
@@ -59,7 +63,7 @@ export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
     var tmp = msg.content.split(" ");
     if (tmp.length != 2) {
-      await msg.channel.send("?ajouterPerk @joueur");
+      await msg.channel.send(fr.usage.addPerk);
       return;
     }
     var id = msg.content.split(" ")[1].replace(/[@<>]/g, "");
@@ -77,7 +81,7 @@ export async function executeMessage(msg: Message) {
     } else if (player.length > 1) {
       selectPlayer(msg, "addPerk", []);
     } else {
-      await msg.channel.send("Ce joueur n'existe pas");
+      await msg.channel.send(fr.error.playerDoesNotExist);
     }
   }
 }

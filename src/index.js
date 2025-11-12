@@ -28,12 +28,13 @@ import { playerSubmit } from "./commands/createPlayer.ts";
 import { perkSubmit } from "./commands/addPerk.ts";
 import { itemSubmit } from "./commands/addItem.ts";
 import { equipmentSubmit } from "./commands/addEquipment.ts";
-import { fr } from "../locales/fr.ts";
+import { fr } from "./locales/fr.ts";
 
 // Node core modules
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { getSelectionType } from "./utils.ts";
 
 // Create Discord client
 const client = new Client({
@@ -110,6 +111,7 @@ client.on("messageCreate", async (msg) => {
     [fr.textCommands.roll]: fr.slashCommands.roll,
     [fr.textCommands.info]: fr.slashCommands.info,
     [fr.textCommands.inventory]: fr.slashCommands.inventory,
+    [fr.textCommands.addProfilePicture]: fr.slashCommands.addProfilePicture,
     [fr.textCommands.new]: fr.slashCommands.new,
     [fr.textCommands.addHP]: fr.slashCommands.addHP,
     [fr.textCommands.removeHP]: fr.slashCommands.removeHP,
@@ -157,6 +159,9 @@ function applyFunction(call, params) {
     case "db.addProfilePic":
       db.addProfilePic(params[0], params[1]);
       return fr.success.imageAdded;
+    case "db.getInventory":
+      var p = db.getInventory(params[0]);
+      return { embeds: [p.toEmbed()] };
   }
 }
 
@@ -328,11 +333,15 @@ async function stringSelectInteraction(interaction) {
     case "charSelect":
       var selected = interaction.values[0];
       var info = interaction.customId.split("/");
-      if (info[2] == "addPerk") {
+      if (
+        info[2] == "addPerk" ||
+        info[2] == "addEquipment" ||
+        info[2] == "addItem"
+      ) {
         let container = SelectionContainer(
           interaction.user.id,
           selected,
-          SelectionTypes.Perk
+          getSelectionType(info[2])
         );
         await interaction.reply({
           components: [container],

@@ -5,14 +5,15 @@ import {
 } from "discord.js";
 import * as db from "../database.ts";
 import { selectPlayer } from "../selectPlayer.ts";
+import { fr } from "../locales/fr.ts";
 
 export const data = new SlashCommandBuilder()
-  .setName("ajouterphoto")
-  .setDescription("Ajouter une photo de profil à un joueur")
+  .setName(fr.slashCommands.addProfilePicture)
+  .setDescription(fr.commandDescriptions.addProfilePicture)
   .addStringOption((option) =>
     option
       .setName("image")
-      .setDescription("Lien vers l'image")
+      .setDescription(fr.optionDescriptions.image)
       .setRequired(true)
   );
 
@@ -28,17 +29,17 @@ export async function executeInteraction(
     );
     if (player.length == 1) {
       db.addProfilePic(player[0], image);
-      await interaction.reply("Image ajoutée");
+      await interaction.reply(fr.success.imageAdded);
     } else if (player.length > 1) {
       selectPlayer(interaction, "db.addProfilePic", [image]);
     } else {
-      await interaction.reply("Ce joueur n'existe pas");
+      await interaction.reply(fr.error.playerDoesNotExist);
     }
   }
 }
 
 export async function executeMessage(msg: Message) {
   if (msg.channel.isSendable()) {
-    await msg.channel.send("Utilisez cette commande en /");
+    await msg.channel.send(fr.error.useSlashCommand);
   }
 }

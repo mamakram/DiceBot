@@ -297,8 +297,9 @@ export function addPlayerPerk(perkName: string, playerName: string) {
 export function addPlayerItem(
   itemName: string,
   playerName: string,
-  amount: number
+  amount: number = 1
 ) {
+  //TODO if item relation already in database increment amount
   //check that it's not already added
   let get = database.prepare(
     "SELECT i.name FROM items AS i INNER JOIN playeritems AS pi ON pi.item_id = i.key INNER JOIN players as pl ON pi.player_id = pl.key WHERE pl.NAME = ?"

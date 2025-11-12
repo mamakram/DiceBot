@@ -5,36 +5,41 @@ import {
   SlashCommandStringOption,
 } from "discord.js";
 import { playMusic } from "../musicplayer.ts";
+import { fr } from "../locales/fr.ts";
+
 const choices = ["sad", "fight", "brook", "smash", "ultra", "ascenseur"];
 
 export const data = new SlashCommandBuilder()
-  .setName("play")
-  .setDescription("Jouer un son")
+  .setName(fr.slashCommands.play)
+  .setDescription(fr.commandDescriptions.play)
   .addStringOption(
     new SlashCommandStringOption()
       .setName("track")
-      .setDescription("Music track to play")
+      .setDescription(fr.optionDescriptions.track)
       .setRequired(true)
       .addChoices(
-        { name: "Sad", value: "sad" },
-        { name: "Fight", value: "fight" },
-        { name: "Brook", value: "brook" },
-        { name: "Smash", value: "smash" },
-        { name: "Ultra Instinct", value: "ultra" },
-        { name: "Ascenseur", value: "elevator" }
+        { name: fr.playChoices.sad, value: "sad" },
+        { name: fr.playChoices.fight, value: "fight" },
+        { name: fr.playChoices.brook, value: "brook" },
+        { name: fr.playChoices.smash, value: "smash" },
+        { name: fr.playChoices.ultra, value: "ultra" },
+        {
+          name: fr.playChoices.elevator,
+          value: "elevator",
+        }
       )
   );
 
 export async function executeInteraction(command: ChatInputCommandInteraction) {
   playMusic(command, command.options.getString("track") ?? "");
-  await command.reply("Commande exécutée");
+  await command.reply(fr.success.commandExecuted);
 }
 
 export async function executeMessage(command: Message) {
   if (command.channel.isSendable()) {
     let array = command.content.split(" ");
     if (array.length != 2 || !choices.includes(array[1])) {
-      await command.channel.send("Mauvais choix");
+      await command.channel.send(fr.error.badChoice);
     } else {
       playMusic(command, array[1]);
     }

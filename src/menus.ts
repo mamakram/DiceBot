@@ -24,6 +24,7 @@ import {
 } from "./utils.ts";
 import * as db from "./database.ts";
 import { BodyParts } from "./objects/Equipment.ts";
+import { fr } from "./locales/fr.ts";
 
 export const SelectionTypes = {
   Perk: 0,
@@ -34,30 +35,9 @@ export const SelectionTypes = {
 type SelectionType = (typeof SelectionTypes)[keyof typeof SelectionTypes];
 
 const selectionText = [
-  [
-    "Choisir une perk préexistante",
-    "perkSelect",
-    "perks",
-    "Pas de perks préexistantes",
-    "ou créer une nouvelle perk",
-    "openPerkContainer",
-  ],
-  [
-    "Choisir un équipement préexistant",
-    "equipmentSelect",
-    "équipements",
-    "Pas d'équipements préexistants",
-    "ou créer un nouvel équipement",
-    "openEquipmentContainer",
-  ],
-  [
-    "Choisir un item préexistant",
-    "itemSelect",
-    "items",
-    "Pas d'items préexistants",
-    "ou créer un nouvel item",
-    "openItemContainer",
-  ],
+  [fr.menus.selection.perk, "perkSelect", "openPerkContainer"],
+  [fr.menus.selection.equipment, "equipmentSelect", "openEquipmentContainer"],
+  [fr.menus.selection.item, "itemSelect", "openItemContainer"],
 ];
 
 const selectionFunctions = [
@@ -91,21 +71,27 @@ export function SelectionContainer(
   type: SelectionType
 ): ContainerBuilder {
   let options = selectionOptions(type);
+  let text = selectionText[type][0] as {
+    chooseExisting: string;
+    placeholder: string;
+    noExisting: string;
+    createNew: string;
+  };
   let container = new ContainerBuilder()
     .setAccentColor(0x0099ff)
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(selectionText[type][0])
+      new TextDisplayBuilder().setContent(text.chooseExisting)
     )
     .addActionRowComponents(
       new ActionRowBuilder<any>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(selectionText[type][1] + "/" + id + "/" + name)
-          .setPlaceholder(selectionText[type][2])
+          .setPlaceholder(text.placeholder)
           .addOptions(
             options.length == 0
               ? [
                   new StringSelectMenuOptionBuilder()
-                    .setLabel(selectionText[type][3])
+                    .setLabel(text.noExisting)
                     .setValue("undefined"),
                 ]
               : options
@@ -116,12 +102,12 @@ export function SelectionContainer(
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(selectionText[type][4])
+          new TextDisplayBuilder().setContent(text.createNew)
         )
         .setButtonAccessory(
           new ButtonBuilder()
-            .setCustomId(selectionText[type][5] + "/" + id + "/" + name)
-            .setLabel("Créer")
+            .setCustomId(selectionText[type][2] + "/" + id + "/" + name)
+            .setLabel(fr.menus.buttons.create)
             .setStyle(ButtonStyle.Primary)
         )
     );
@@ -143,24 +129,24 @@ export function perkCreationContainer(
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Nom de la perk: ")
+          new TextDisplayBuilder().setContent(fr.menus.labels.perkName)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterPerkName/+" + id + "/" + name)
-            .setLabel("Choisir nom")
+            .setLabel(fr.menus.buttons.chooseName)
             .setStyle(ButtonStyle.Primary)
         )
     )
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Condition (optionnel) :")
+          new TextDisplayBuilder().setContent(fr.menus.labels.condition)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterCondition/" + id + "/" + name)
-            .setLabel("Choisir Condition")
+            .setLabel(fr.menus.buttons.chooseCondition)
             .setStyle(ButtonStyle.Primary)
         )
     );
@@ -172,7 +158,7 @@ export function perkCreationContainer(
     new ActionRowBuilder<any>().addComponents(
       new ButtonBuilder()
         .setCustomId("perkSubmit/" + id + "/" + name)
-        .setLabel("Valider")
+        .setLabel(fr.menus.buttons.validate)
         .setStyle(ButtonStyle.Primary)
     )
   );
@@ -188,24 +174,24 @@ export function equipmentCreationContainer(
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Nom de l'équipment: ")
+          new TextDisplayBuilder().setContent(fr.menus.labels.equipmentName)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterEquipmentName/+" + id + "/" + name)
-            .setLabel("Choisir nom")
+            .setLabel(fr.menus.buttons.chooseName)
             .setStyle(ButtonStyle.Primary)
         )
     )
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Description (optionnel) :")
+          new TextDisplayBuilder().setContent(fr.menus.labels.description)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterDescription/" + id + "/" + name)
-            .setLabel("Choisir description")
+            .setLabel(fr.menus.buttons.chooseDescription)
             .setStyle(ButtonStyle.Primary)
         )
     )
@@ -213,7 +199,7 @@ export function equipmentCreationContainer(
       new ActionRowBuilder<any>().setComponents(
         new StringSelectMenuBuilder()
           .setCustomId("bodyPartSelect/" + id)
-          .setPlaceholder("Partie du corps")
+          .setPlaceholder(fr.menus.labels.bodyPart)
           .setRequired(true)
           .addOptions(bodyPartOptions())
       )
@@ -224,12 +210,13 @@ export function equipmentCreationContainer(
     new ActionRowBuilder<any>().addComponents(
       new ButtonBuilder()
         .setCustomId("equipmentSubmit/" + id + "/" + name)
-        .setLabel("Valider")
+        .setLabel(fr.menus.buttons.validate)
         .setStyle(ButtonStyle.Primary)
     )
   );
   return container;
 }
+
 export function itemCreationContainer(
   id: string,
   name: string
@@ -239,12 +226,12 @@ export function itemCreationContainer(
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Nom de l'item: ")
+          new TextDisplayBuilder().setContent(fr.menus.labels.itemName)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterItemName/+" + id + "/" + name)
-            .setLabel("Choisir nom")
+            .setLabel(fr.menus.buttons.chooseName)
             .setStyle(ButtonStyle.Primary)
         )
     )
@@ -252,7 +239,7 @@ export function itemCreationContainer(
       new ActionRowBuilder<any>().setComponents(
         new StringSelectMenuBuilder()
           .setCustomId("amountSelect/" + id)
-          .setPlaceholder("quantité")
+          .setPlaceholder(fr.menus.labels.amount)
           .setRequired(true)
           .addOptions(numberOptions(20))
       )
@@ -261,7 +248,7 @@ export function itemCreationContainer(
     new ActionRowBuilder<any>().addComponents(
       new ButtonBuilder()
         .setCustomId("itemSubmit/" + id + "/" + name)
-        .setLabel("Valider")
+        .setLabel(fr.menus.buttons.validate)
         .setStyle(ButtonStyle.Primary)
     )
   );
@@ -278,12 +265,12 @@ export function playerCreationContainer(id: string): ContainerBuilder {
     .addSectionComponents(
       new SectionBuilder()
         .addTextDisplayComponents(
-          new TextDisplayBuilder().setContent("Nom du personnage: ")
+          new TextDisplayBuilder().setContent(fr.menus.labels.playerName)
         )
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("enterPlayerName/+" + id)
-            .setLabel("Choisir nom")
+            .setLabel(fr.menus.buttons.chooseName)
             .setStyle(ButtonStyle.Primary)
         )
     )
@@ -291,7 +278,7 @@ export function playerCreationContainer(id: string): ContainerBuilder {
       new ActionRowBuilder<any>().setComponents(
         new UserSelectMenuBuilder()
           .setCustomId("userSelect/" + id)
-          .setPlaceholder("Joueur")
+          .setPlaceholder(fr.menus.labels.player)
           .setRequired(true)
           .setMaxValues(1)
       )
@@ -300,16 +287,14 @@ export function playerCreationContainer(id: string): ContainerBuilder {
       new ActionRowBuilder<any>().setComponents(
         new StringSelectMenuBuilder()
           .setCustomId("hpSelect/" + id)
-          .setPlaceholder("PV")
+          .setPlaceholder(fr.menus.labels.hp)
           .setRequired(true)
           .addOptions(numberOptions(20))
       )
     )
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        "Choisissez les **stats** de base du joueur:"
-      )
+      new TextDisplayBuilder().setContent(fr.menus.labels.chooseStats)
     );
   //add stat selectors
   for (var stat of statSelectionComponents(id)) {
@@ -321,7 +306,7 @@ export function playerCreationContainer(id: string): ContainerBuilder {
     new ActionRowBuilder<any>().addComponents(
       new ButtonBuilder()
         .setCustomId("playerSubmit/" + id)
-        .setLabel("Valider")
+        .setLabel(fr.menus.buttons.validate)
         .setStyle(ButtonStyle.Primary)
     )
   );
@@ -344,7 +329,7 @@ export function modifierComponent(
       new ActionRowBuilder<any>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId("modStatSelect/" + id + "/" + num)
-          .setPlaceholder("Stat")
+          .setPlaceholder(fr.menus.labels.stat)
           .addOptions(statOptions())
           .setRequired(true)
       )
@@ -353,7 +338,7 @@ export function modifierComponent(
       new ActionRowBuilder<any>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId("modValueSelect/" + id + "/" + num)
-          .setPlaceholder("valeur")
+          .setPlaceholder(fr.menus.labels.value)
           .addOptions(numberOptions(5, -5, true))
           .setRequired(true)
       )
@@ -366,7 +351,7 @@ export function modifierComponent(
         .setButtonAccessory(
           new ButtonBuilder()
             .setCustomId("addModifier/" + id + "/" + num)
-            .setLabel("Ajouter modification")
+            .setLabel(fr.menus.buttons.addModifier)
             .setStyle(ButtonStyle.Primary)
         )
     );
@@ -390,7 +375,7 @@ export function stringInputModal(
     .setTitle(name)
     .addLabelComponents(
       new LabelBuilder()
-        .setLabel("Entrez " + name + " :")
+        .setLabel(fr.menus.labels.enter(name))
         .setTextInputComponent(
           new TextInputBuilder()
             .setCustomId(string_id)
