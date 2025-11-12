@@ -21,6 +21,7 @@ export const fr = {
     badSyntax: "Erreur : mauvaise syntaxe",
     badChoice: "Mauvais choix",
     useSlashCommand: "Utilisez cette commande en /",
+    notInVoiceChannel: "Faut etre dans un channel vocal pour ça !",
   },
 
   // Modal titles

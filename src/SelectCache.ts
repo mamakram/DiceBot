@@ -1,5 +1,5 @@
 /**
- * Cache object to store selected values in String Select object
+ * Cache object to store selected values in String Select object and other Discord objects
  * because they are not included by default in the object
  * in discordjs
  *
@@ -26,4 +26,5 @@ export class SelectCache {
   }
 }
 
+//singleton used in code
 export const selectCache = new SelectCache();

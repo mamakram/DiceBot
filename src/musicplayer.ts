@@ -14,6 +14,8 @@ import {
   entersState,
 } from "@discordjs/voice";
 
+import { fr } from "./locales/fr.ts";
+
 import { Message, ChatInputCommandInteraction } from "discord.js";
 
 const soundsFolder = "sounds/";
@@ -34,7 +36,7 @@ export async function playMusic(context: CommandType, folder: string) {
     !member.voice.channelId ||
     !guild?.voiceAdapterCreator
   ) {
-    return context.reply("Faut etre dans un channel vocal pour ça !");
+    return context.reply(fr.error.notInVoiceChannel);
   }
   const connection = joinVoiceChannel({
     channelId: member.voice.channelId,
